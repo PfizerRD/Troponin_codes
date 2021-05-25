@@ -77,7 +77,7 @@ def video_generation(subfolder,fps=100.0,interFrame=1):
 
 if __name__ == "__main__":
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210513DataSetAnalysis\Plate3'
+    rootDir = r'E:\Troponin_programs\Troponin_data\Plate1'
 
     outputFolder = rootDir
 
@@ -91,6 +91,6 @@ if __name__ == "__main__":
     fps = 100.0;
     interFrame = 1
     tic = time.time()
-    Parallel(n_jobs=36,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
+    Parallel(n_jobs=3,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
     toc = time.time()
     print('total time is: ' + str(toc-tic))
