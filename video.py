@@ -44,7 +44,7 @@ from numpy import pi, sin, cos
 import cv2
 
 # built-in modules
-from time import clock
+from time import time
 
 # local modules
 import common

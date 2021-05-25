@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[309]:
+# In[26]:
 
 
 import matplotlib.pyplot as plt
@@ -151,32 +151,283 @@ def CellSegmentation(img_enhance,block_size=25,offset=0.02):
     
     return seg
 
+def movingCellDetection(subfolder,fps=100.0,interFrame=1):
+    print(subfolder)    
+    # Downsampling in resolution
+    ds_res = 1
+    # Downsampling in time
+    ds_time = interFrame 
+##for subfolder in subfolders[0:len(subfolders):1]:
+##for subfolder in subfolders[49:72]:
+    imageNameRoot =  subfolder  + "\\tiff\\*.tif"
+    #B9, C2,C4
+    (dirName,videoFileName) = os.path.split(subfolder)
+
+    imageNameRoot0 = dirName
+    videoName = videoFileName
+    # Output video frame rate (needs to check the true image acqusition frequency and the ds_time defined below)
+        
+    videoOut = subfolder+'\\' + videoName + '_video_ds.avi'
+
+    imageNames = sorted(glob.glob(imageNameRoot))
+    imageNum = len(imageNames)
+    
+    if imageNum>1500:
+        fps=200.0
+    img0 = cv2.imread(imageNames[0])
+    img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+    img = img1[::ds_res,::ds_res]
+
+    hei, wid = img.shape
+
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (wid,hei))
+
+
+    mm = 0
+    tic = time.time()
+
+    for jj in range(0,imageNum-1,interFrame):
+        img0 = cv2.imread(imageNames[jj])
+        img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+        img = img1[::ds_res,::ds_res]
+         
+        frame_final = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) 
+
+        #frame_final=np.concatenate((frame_final,vis),axis=1) 
+
+        VideoOutput.write(frame_final)
+        mm+=1
+        if mm%100==0:
+            print(mm)
+    toc = time.time()
+    print(toc-tic)     
+
+    VideoOutput.release()
+    cv2.destroyAllWindows()
+    toc = time.time()
+
+
+# In[236]:
+
+
+rootDir = r'E:\Troponin_programs\Troponin_data\Plate2'
+
+outputFolder = rootDir
+
+if not os.path.isdir(outputFolder):
+    print('The OUTPUT directory is not present. Creating a new one..')
+    os.mkdir(outputFolder)
+        
+subfolders = [os.path.join(rootDir, o) for o in os.listdir(rootDir) if os.path.isdir(os.path.join(rootDir,o))]
+subfolders = sorted(subfolders)
+print(subfolders)
+
+
+# In[237]:
+
+
+###for subfolder in subfolders:
+subfolder=subfolders[2]
+print(subfolder)
+interFrame=10
+ds_time = interFrame 
+
+imageNameRoot =  subfolder  + "\\tiff\\*.tif"
+    #B9, C2,C4
+(dirName,videoFileName) = os.path.split(subfolder)
+
+imageNameRoot0 = dirName
+imageNames = sorted(glob.glob(imageNameRoot))
+imageNum = len(imageNames)
+print(dirName)
+print(imageNames[0])
+print(imageNum)
+fps=100.0
+if imageNum>1500:
+    fps=200.0
+    
+
+
+# In[238]:
+
+
+kk = 0
+stackLen = len(imageNames)//ds_time
+img0 = cv2.imread(imageNames[0])
+img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+reg_hei,reg_wid = img1.shape
+imgStack = np.zeros([reg_hei, reg_wid, int(stackLen)+1],dtype =  np.float32)
+
+for ii in range(0,imageNum,ds_time):
+    img0 = cv2.imread(imageNames[ii])
+    img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+    imgStack[:,:,kk]=img1
+    kk = kk+1
+
+imgStack.astype(np.float32)
+plt.imshow(imgStack[:,:,0])
+
+
+# In[239]:
+
+
+from scipy.fftpack import fftn,fftfreq
+
+# sample spacing
+T = 1.0 / stackLen*ds_time
+
+# Number of sample points
+N = stackLen
+print(imgStack.shape)
+print(T)
+print(stackLen)
+
+xf = fftfreq(N, T)[:N//2]
+
+freq_range = np.where((np.array(xf)>0.5) & (np.array(xf)<1.5)) ##only check freqency domain from 0.5hz to 1.5hz
+
+print(freq_range[0])
+print(type(freq_range))
+print(imgStack.dtype)
+print(imgStack.shape)
+imgStackFFT =np.abs(fftn(imgStack, axes=2))
+print(imgStackFFT.shape)
+imgFFTMax= np.max(imgStackFFT[:,:,freq_range[0]],axis=2)
+print(imgStackFFT.shape)
+print(imgFFTMax.shape)
+
+
+# In[240]:
+
+
+plt.imshow(imgFFTMax)
+
+
+# In[241]:
+
+
+plt.imshow(np.log(imgFFTMax+1))
+
+print(np.max(np.log(imgFFTMax)))
+print(np.median(np.log(imgFFTMax)))
+print(np.mean(np.log(imgFFTMax)))
+print(np.std(np.log(imgFFTMax)))
+print(np.percentile(np.log(imgFFTMax[:]),95))
+
+print(np.max(imgFFTMax))
+print(np.median(imgFFTMax))
+print(np.mean(imgFFTMax))
+print(np.std(imgFFTMax))
+print(np.percentile(imgFFTMax[:],95))
+
+
+# In[242]:
+
+
+th = np.mean(imgFFTMax)+3*np.std(imgFFTMax)
+th_log=np.mean(np.log(imgFFTMax))+3*np.std(np.log(imgFFTMax))
+plt.imshow(imgFFTMax>th)
+
+
+# In[243]:
+
+
+plt.imshow(np.log(imgFFTMax)>th_log)
+
+
+# In[244]:
+
+
+plt.plot(xf[1:N//2],np.mean(np.mean(imgStackFFT[120:250,0:50,1:N//2],axis=0),axis=0))
+
+
+# In[217]:
+
+
+plt.plot(xf[1:N//2],np.mean(np.mean(imgStackFFT[350:450,950:1010,1:N//2],axis=0),axis=0))
+print(freq_range)
+print(type(freq_range))
+
+
+# In[218]:
+
+
+plt.plot(xf[freq_range[0]],np.mean(np.mean(imgStackFFT[350:450,950:1010,freq_range[0]],axis=0),axis=0))
+
+
+# In[139]:
+
+
+plt.imshow(np.log(imgFFTMax)>th_log)
+
+
+# In[94]:
+
+
+plt.plot(imgStackFFT[50,50,2:])
+
+
+# In[85]:
+
+
+plt.imshow(np.real(imgStackFFT[:,:,100]))
+
 
 # In[319]:
 
 
-rootDir = 'Z:\\TROPONIN2021\\20210511DataSetAnalysisDebug\\subDataSet\\Plate1\Plate1_Matrigel_s01'
+movingCellDetection(subfolder,fps=100.0,interFrame=1):
+    print(subfolder)    
+    # Downsampling in resolution
+    ds_res = 1
+    # Downsampling in time
+    ds_time = interFrame 
+##for subfolder in subfolders[0:len(subfolders):1]:
+##for subfolder in subfolders[49:72]:
+    imageNameRoot =  subfolder  + "\\tiff\\*.tif"
+    #B9, C2,C4
+    (dirName,videoFileName) = os.path.split(subfolder)
+
+    imageNameRoot0 = dirName
+    videoName = videoFileName
+    # Output video frame rate (needs to check the true image acqusition frequency and the ds_time defined below)
+        
+    videoOut = subfolder+'\\' + videoName + '_video_ds.avi'
+
+    imageNames = sorted(glob.glob(imageNameRoot))
+    imageNum = len(imageNames)
+    
+    if imageNum>1500:
+        fps=200.0
+    img0 = cv2.imread(imageNames[0])
+    img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+    img = img1[::ds_res,::ds_res]
+
+    hei, wid = img.shape
+
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (wid,hei))
 
 
-inputVideoNames = glob.glob(rootDir+"\\*.avi")
-## Specify input video
-##inputVideoNames = inputVideoNames[0:2]
-fps = 100
-## Specify output
-outputFolder = 'Z:\\TROPONIN2021\\20210511DataSetAnalysisDebug\\subDataSetOutput\\'
+    mm = 0
+    tic = time.time()
 
-for videoName in inputVideoNames:
-    print(videoName)
-    magStack, angStack = MotionVectorCalculation(videoName, outputFolder, fps)
-    magMax = np.max(magStack,2)*50
-    magMean= np.mean(magStack,2)*50
-    (dirName,videoFileName) = os.path.split(videoName)
-    outputPath =  outputFolder+'\\' + videoFileName[:-4]
-    magMaxImageName =  outputPath+"/"+videoFileName[:-4]+"_max_activity.tif" 
-    magMeanImageName =  outputPath+"/"+videoFileName[:-4]+"_mean_activity.tif" 
-    cv2.imwrite(magMeanImageName,magMean)
-    cv2.imwrite(magMaxImageName,magMax)
-               
+    for jj in range(0,imageNum-1,interFrame):
+        img0 = cv2.imread(imageNames[jj])
+        img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
+        img = img1[::ds_res,::ds_res]
+         
+        frame_final = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) 
+
+        #frame_final=np.concatenate((frame_final,vis),axis=1) 
+
+        VideoOutput.write(frame_final)
+        mm+=1
+        if mm%100==0:
+            print(mm)
+    toc = time.time()
+    print(toc-tic)     
 
 
 # In[321]:

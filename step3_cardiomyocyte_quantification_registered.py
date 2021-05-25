@@ -1036,7 +1036,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
 
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210511DataSetAnalysis\Plate1'
+        rootDir = r'E:\Troponin_programs\Troponin_data\Plate1'
 
         rotate=1 ## rotate=1 if running on vm test1
  
@@ -1049,4 +1049,4 @@ if __name__ == "__main__":
         subFolders = sorted(list(listdir_nohidden(rootDir)))
        
         ###CM_pipeline(rootDir,rotate,relax_th,subFolders)
-        Parallel(n_jobs=9,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
+        Parallel(n_jobs=3,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
