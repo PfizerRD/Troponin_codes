@@ -49,11 +49,6 @@ if __name__ == "__main__":
         frameName0=re.split('_s\d\dt',tiffFileName)[1]
         frameName="frame_"+re.split('_ORG',frameName0)[0]
         
-        if jj%200 ==0:
-            print(imageNames[jj])
-            print(tiffFileName)
-            print(frameName0)
-            print(frameName)
         
         outputSubFolder = outputFolder+'\\' + subfolderName
         
