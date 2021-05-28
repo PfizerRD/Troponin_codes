@@ -45,7 +45,7 @@ if __name__ == "__main__":
             continue
 
         (dirName,tiffFileName) = os.path.split(imageNames[jj])
-        subfolderName = re.split('t\d\d\d\d',tiffFileName)[0]
+        subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
         frameName0=re.split('_s\d\dt',tiffFileName)[1]
         frameName="frame_"+re.split('_ORG',frameName0)[0]
         
