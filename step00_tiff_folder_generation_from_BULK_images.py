@@ -18,64 +18,105 @@ import time
 import re
 import shutil
 
+import multiprocessing
+from joblib import Parallel, delayed
 
-rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210513_Matrigel_Iso_DMSO\Plate1_Mat_Iso\*.tif'
+def listdir_nohidden(path):
+    for f in os.listdir(path):
+        if not f.startswith('.') and not f.startswith('contractivity'):
+            yield f
 
-outputFolder = r'Z:\pangj05\TROPONIN2021\20210513DataSetAnalysis'
+def folder_creation(outputFolder,imageName):
 
-interFrame = 1
+    (dirName,tiffFileName) = os.path.split(imageName)
+    subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
+
+    outputSubFolder = outputFolder+'\\' + subfolderName
     
+    if not os.path.isdir(outputSubFolder):
+        print('The SUBFOLDER directory is not present. Creating a new one..')
+        os.mkdir(outputSubFolder)
+
+    outputTiffFolder = outputSubFolder + '\\tiff'
+  
+    if not os.path.isdir(outputTiffFolder):
+        print('The TIFF directory is not present. Creating a new one..')
+        os.mkdir(outputTiffFolder)
+
+
+def tiff_folder_generation(outputFolder,imageName):
+    fileSize = os.path.getsize(imageName) 
+    ##print('Size of file is', fileSize, 'bytes')
+    if fileSize<100000:
+        return
+
+    (dirName,tiffFileName) = os.path.split(imageName)
+    subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
+    frameName0=re.split('_s\d\dt',tiffFileName)[1]
+    frameName="frame_"+re.split('_ORG',frameName0)[0]
+
+    outputSubFolder = outputFolder+'\\' + subfolderName
+    
+    if not os.path.isdir(outputSubFolder):
+        print('The SUBFOLDER directory is not present. Creating a new one..')
+        os.mkdir(outputSubFolder)
+
+    outputTiffFolder = outputSubFolder + '\\tiff'
+
+    src = imageName
+    dst = outputTiffFolder+'\\'+subfolderName+'_'+frameName+'.tif'
+
+    if not os.path.isdir(outputTiffFolder):
+        print('The TIFF directory is not present. Creating a new one..')
+        os.mkdir(outputTiffFolder)
+        ###shutil.copy(src, dst)
+        shutil.move(src,dst)
+    else:
+        ###print('The TIFF directory is present.')
+        shutil.move(src, dst)
+        ###shutil.copy(src, dst)
+
+def copy_first_frame(outputFolder,subfolder):
+    imageNameRoot =  outputFolder+"\\"+subfolder  + "\\tiff"+"\\*.tif"
+    imageNames = sorted(glob.glob(imageNameRoot))
+    
+    (dirName,tiffFileName) = os.path.split(imageNames[0])
+    frameNum=re.split('frame_',tiffFileName)[1]
+    frameName="frame_"+frameNum
+
+    src = imageNames[0]
+    dst = outputFolder+"\\"+subfolder+"\\"+frameName
+    shutil.copy(src, dst)
+
+
 if __name__ == "__main__":
 
     tic = time.time()
+
+    rootDir = r'E:\Troponin_programs\Troponin_data\step00_debug\source_files\*.tif'
+    outputFolder = r'E:\Troponin_programs\Troponin_data\step00_debug\dest_files_6cpu_move'
+
+    cpu_num = 6
     if not os.path.isdir(outputFolder):
         print('The OUTPUT directory is not present. Creating a new one..')
         os.mkdir(outputFolder)
         
     imageNames = sorted(glob.glob(rootDir))
-    imageNum = len(imageNames)
-    print(imageNum)
 
+    ## have to set to single core to run to avoid folder/directory overwriting conflicts
+    Parallel(n_jobs=1,prefer='threads')(delayed(folder_creation)(outputFolder,imageName) for imageName in imageNames)   
+    toc1 = time.time()
+    print('folder creation time: ' + str(toc1-tic))
 
-    for jj in range(0,len(imageNames),interFrame):
-
-        fileSize = os.path.getsize(imageNames[jj]) 
-        ##print('Size of file is', fileSize, 'bytes')
-        if fileSize<100000:
-            continue
-
-        (dirName,tiffFileName) = os.path.split(imageNames[jj])
-        subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
-        frameName0=re.split('_s\d\dt',tiffFileName)[1]
-        frameName="frame_"+re.split('_ORG',frameName0)[0]
-        
-        
-        outputSubFolder = outputFolder+'\\' + subfolderName
-        
-        if not os.path.isdir(outputSubFolder):
-            print('The SUBFOLDER directory is not present. Creating a new one..')
-            os.mkdir(outputSubFolder)
-            
-        videoOut = outputSubFolder +'\\' + subfolderName + '_video_ds.avi'
-
-        outputTiffFolder = outputSubFolder + '\\tiff'
-        
-        src = imageNames[jj]
-        dst = outputTiffFolder+'\\'+frameName+'.tif'
-        dst0 = outputSubFolder+'\\'+frameName+'.tif'
-
-        if not os.path.isdir(outputTiffFolder):
-            print('The TIFF directory is not present. Creating a new one..')
-            os.mkdir(outputTiffFolder)
-            shutil.copyfile(src, dst)
-            shutil.copyfile(src, dst0)
-        else:
-            ###print('The TIFF directory is present.')
-            shutil.move(src, dst)
-            
-
-
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
+    toc2 = time.time()
+    print("copy/moving all frames time: " + str(toc2-toc1))
+    
+    subfolders = sorted(list(listdir_nohidden(outputFolder)))
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(copy_first_frame)(outputFolder,subfolder) for subfolder in subfolders)  
     toc = time.time()
+    print("copy first frame time: " + str(toc-toc2))
+
     print('Total time is: ' + str(toc-tic))
 
 
