@@ -18,6 +18,8 @@ import time
 import multiprocessing
 from joblib import Parallel, delayed
 
+DEFAULT_FRAME_NUM = 700
+
 def video_generation(subfolder,fps=100.0,interFrame=1):
     print(subfolder)    
     # Downsampling in resolution
@@ -39,7 +41,7 @@ def video_generation(subfolder,fps=100.0,interFrame=1):
     imageNames = sorted(glob.glob(imageNameRoot))
     imageNum = len(imageNames)
     
-    if imageNum>1500:
+    if imageNum>DEFAULT_FRAME_NUM:
         fps=200.0
     img0 = cv2.imread(imageNames[0])
     img1 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
