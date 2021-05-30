@@ -1036,10 +1036,11 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
 
 if __name__ == "__main__":
 
-        rootDir = r'E:\Troponin_programs\Troponin_data\Plate1'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate1'
 
         rotate=1 ## rotate=1 if running on vm test1
  
+        cpu_num = 12
         relax_th = 0.7
 
         ##random_vector = Parallel(n_jobs=2, backend='threads')(delayed(stochastic_function)(10) for _ in range(n_vectors))
@@ -1049,4 +1050,4 @@ if __name__ == "__main__":
         subFolders = sorted(list(listdir_nohidden(rootDir)))
        
         ###CM_pipeline(rootDir,rotate,relax_th,subFolders)
-        Parallel(n_jobs=3,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
