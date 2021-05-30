@@ -21,7 +21,7 @@ from skimage.morphology import remove_small_holes, binary_erosion
 from skimage.measure import label, regionprops
 import csv
 
-rootDir = r'Z:\pangj05\TROPONIN2021\20210513DataSetAnalysis\Plate4'
+rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate1'
 ###rootDir ='Z:\\TROPONIN2021\\Data20213024_revisted'
 
 outputFolder = rootDir
@@ -75,57 +75,5 @@ for subfolder in subfolders:
     fout.close()
     
     
-
-
-# In[ ]:
-
-
-plt.imshow(img0[:,:,2])
-
-
-# In[ ]:
-
-
-print(np.max(img0[:,:,2]))
-cellMask1 = (img0[:,:,2]>np.max(img0[:,:,2])-10)
-
-cellMask2 = ndi.binary_fill_holes(cellMask1)
-
-cellMask3 =  remove_small_objects(cellMask2,200)
-
-
-# In[ ]:
-
-
-plt.imshow(cellMask3)
-
-
-# In[ ]:
-
-
-cellLabel = label(cellMask3)
-plt.imshow(cellLabel)
-print(np.min(cellLabel))
-print(np.max(cellLabel))
-
-
-# In[ ]:
-
-
-features = regionprops(cellLabel)
-for ff in features:
-    print(ff.bbox)
-
-
-# In[ ]:
-
-
-plt.imshow(img0, cmap='gray')
-plt.imshow(cellLabel, cmap='jet', alpha=0.1)
-
-
-# In[ ]:
-
-
 
 
