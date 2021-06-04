@@ -21,7 +21,7 @@ from skimage.morphology import remove_small_holes, binary_erosion
 from skimage.measure import label, regionprops
 import csv
 
-rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate1'
+rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate5'
 ###rootDir ='Z:\\TROPONIN2021\\Data20213024_revisted'
 
 outputFolder = rootDir
