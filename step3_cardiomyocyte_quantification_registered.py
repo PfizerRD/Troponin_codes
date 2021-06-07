@@ -863,13 +863,13 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                       'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
                       'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
                       'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus',
-                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus') )
+                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num') )
 
     writer_r.writerow( ('subFolder','cellTag', 'A_frame', 'B_frame','C_frame','D_frame','E_frame','F_frame','J_frame','I_frame',
                       'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
                       'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
                       'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus',
-                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus') )
+                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num') )
         
     fout.flush()
     fout_r.flush()    
@@ -906,7 +906,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     print("folder: ")
     print(imgFolder)
     imgNames = sorted(glob.glob(imgFolder))
-    
+    frameNum = len(imgNames)
 
     for tag in range(cellNum):
         ind_x1 = int(boxInfo.iloc[tag][0])
@@ -964,7 +964,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                           speed1[Es[jj]],speed1[Es[jj]-1],speed1[Es[jj]+1],
                           speed1[Fs[jj]],speed1[Fs[jj]-1],speed1[Fs[jj]+1],
                           length1[Js[jj]],length1[Js[jj]-1],length1[Js[jj]+1],
-                          length1[Is[jj]],length1[Is[jj]-1],length1[Is[jj]+1]))
+                          length1[Is[jj]],length1[Is[jj]-1],length1[Is[jj]+1],frameNum))
     
         ####
         #### registered
@@ -1017,7 +1017,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                           speed[Es_r[jj]],speed[Es_r[jj]-1],speed[Es_r[jj]+1],
                           speed[Fs_r[jj]],speed[Fs_r[jj]-1],speed[Fs_r[jj]+1],
                           length[Js_r[jj]],length[Js_r[jj]-1],length[Js_r[jj]+1],
-                          length[Is_r[jj]],length[Is_r[jj]-1],length[Is_r[jj]+1]))
+                          length[Is_r[jj]],length[Is_r[jj]-1],length[Is_r[jj]+1],frameNum))
             
 
         del(cellMasks1)
