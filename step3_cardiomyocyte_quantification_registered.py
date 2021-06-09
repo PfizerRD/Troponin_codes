@@ -61,8 +61,6 @@ def SimilarityComparison(img10, img20):
     img1 = gaussian(img10, sigma=1)
     img2 = gaussian(img20, sigma=1)
    
-    ###img1 = img10
-    ###img2 = img20
     reg_hei,reg_wid = img10.shape
     
     N = reg_hei*reg_wid
@@ -93,32 +91,28 @@ def FitEllipse(cellMask):
     xc,yc,a,b,theta = np.round(ellipse_fit.params, 3)
 
     img_ellipse = np.zeros(cellMask.shape, dtype=np.uint8)
-   # print(cellMask.shape)
-  
+   
     rr, cc = ellipse(xc,yc,a,b,rotation = theta)
     
     row,col =  cellMask.shape
+
+    ## only keep ellipse within the box region
     rr = rr[np.where(rr<row)]
     cc = cc[np.where(rr<row)]
     
     rr = rr[np.where(cc<col)]
-    cc = cc[np.where(cc<col)]
-    
-    
+    cc = cc[np.where(cc<col)] 
     img_ellipse[rr, cc] = 1
     return a, b, img_ellipse,theta
 
     
-def SingleCellCropping(imgNames, ind_x1,ind_x2,ind_y1,ind_y2):
+def SingleCellCropping(imgNames, ind_x1, ind_x2, ind_y1, ind_y2):
 
     img0 = cv2.imread(imgNames[0])
     img = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
     imgSample = img[ind_x1:ind_x2,ind_y1:ind_y2]
-    ###plt.rcParams['figure.figsize'] = [8, 8]
-    ###plt.imshow(imgSample)
 
     reg_hei,reg_wid = imgSample.shape
-
 
     videoLen = len(imgNames)
     regionStack = np.zeros([reg_hei, reg_wid, int(videoLen)-1],dtype =  np.float64)
@@ -127,8 +121,7 @@ def SingleCellCropping(imgNames, ind_x1,ind_x2,ind_y1,ind_y2):
         frame_rgb =  cv2.imread(imgNames[ii])
         frame = cv2.cvtColor(frame_rgb,cv2.COLOR_BGR2GRAY)
         regionStack[:,:,ii] = frame[ind_x1:ind_x2,ind_y1:ind_y2] 
-
-    
+  
     return imgSample, regionStack
 
 
@@ -139,6 +132,7 @@ def getLargestCC(segmentation):
         return segmentation
     largestCC = labels == np.argmax(np.bincount(labels.flat)[1:])+1
     return largestCC
+
 
 def SingleCellSegmentationFitting(imgSample):
     #cellMask0 = (imgSample>np.mean(imgSample))
@@ -331,7 +325,7 @@ def SegmentationDisplayOutput(regionStack,bounds,ellipseMasks,videoName,tag,regi
     plt.rcParams['figure.figsize'] = [12, 8]
     
     for ind in range(0,regionStack.shape[2],inter):
-    ##for ind in range(10):
+   
         fig, (ax1,ax2,ax3) = plt.subplots(1,3)
 
         imgSample = regionStack[:,:,ind]
@@ -365,8 +359,7 @@ def SegmentationDisplayOutput(regionStack,bounds,ellipseMasks,videoName,tag,regi
                 imgSample[:,a] = 0
                 imgSample[:,b] = 0
             ax3.imshow(imgSample)
- 
-        
+         
         displayImageName = outputFolder+"\\frame_"+str(ind).zfill(4)+".jpg"
 
         fig.savefig(displayImageName)
@@ -391,6 +384,7 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
 
     labelSize = np.zeros(max(labels_relax))
     label_ref = 0
+ 
     for ii in range(1,max(labels_relax)+1): # what if the longest label happens at end? Does it matter? 
         labelSize[ii-1] = sum(labels_relax==ii)
         if labelSize[ii-1]>5:
@@ -404,12 +398,11 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
     else:    
         inds_ref =  np.where(labels_relax == label_ref)[0]
 
-
     videoLen = regionStack.shape[2]
 
     SC_values_ref = np.zeros([len(inds_ref),int(videoLen)],dtype =  np.float64)
     for ii in range(len(inds_ref)):
-        img1 = regionStack[:,:,inds_ref[ii]]
+        img1 = regionStack[:,:,inds_ref[ii]-1]
         for jj in range(int(videoLen)):
             img2 = regionStack[:,:,jj]
             SC_values_ref[ii,jj] = SimilarityComparison(img1,img2)
@@ -424,13 +417,12 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
     ### Modified by Pangjc to normalize length to the REAL cardiomyocytes length (unit: pixel) 04/21/2021
     length0 = 100*(1-(1-SC_baseline_ref/SC_max)/NR)
     length = lenMin+(lenMax-lenMin)*(length0-np.min(length0))/(np.max(length0)-np.min(length0))
-    
-    
+      
     (dirName,videoFileName) = os.path.split(videoName)
     
     if display:
 
-        plt.rcParams['figure.figsize'] = [8, 8]
+        ###plt.rcParams['figure.figsize'] = [8, 8]
         fig, (ax1,ax2,ax3)= plt.subplots(3,1)
 
         ###plt.subplot(311)
@@ -455,7 +447,7 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         print('NR: ' + str(NR))
         print('relaxation length: ' + str(lenRelaxation))
 
-        plt.rcParams['figure.figsize'] = [8, 8]
+        ###plt.rcParams['figure.figsize'] = [8, 8]
         fig, (ax1,ax2) = plt.subplots(2,1)
         ###plt.subplot(211)
         ax1.hist(2*majorValues_valid, bins=30)
@@ -468,12 +460,10 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         plt.close(fig)
         gc.collect()
 
-
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         fig, (ax1,ax2) = plt.subplots(2,1)
       
-        ###plt.subplot(211)
-        
+        ###plt.subplot(211)      
         ax1.imshow(SC_values_ref)
         ax1.set_xlim(0,SC_values_ref.shape[1])
         ax1.set_title("Intensity Similairy Comparison for REFERENCE FRAMES")
@@ -511,13 +501,11 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         ax2.plot(peaks1,speed[peaks1], "o")
         ax2.set_title('SPEED (Unit: pixel/time)')
    
-        
         displayFigName4 = dirName +'\\' + videoFileName[:-4]+"_segmentation_cell_"+str(tag)+"_quantification_part4.jpg"
         fig.savefig(displayFigName4)
         fig.clf()
         plt.close(fig)
         
-    
     return majorValues, minorValues,length, bounds, cellMasks, regionStack, ellipseMasks, frames_relax, inds_ref,SC_values_ref, thetas
 
 
@@ -534,25 +522,14 @@ def SingleCellRegistration(regionStack, ellipseMasks, majorValues, majorExtra,mi
     box_prop = props[0]
     y0,x0 = box_prop.centroid
 
-    ###majorExtra = 15
-    ###minorExtra = 10
-
-    boxLength = box_prop.major_axis_length+majorExtra
-    boxWidth = box_prop.minor_axis_length+minorExtra
+    boxLength = box_prop.major_axis_length + majorExtra
+    boxWidth = box_prop.minor_axis_length + minorExtra
 
     orientation = box_prop.orientation
-    print("orientation: ")
-    print(orientation)
+
     if rotate:
-        print("VMTEST1 running")
-        # orientation=-orienation
-        #orientation=pi/2-orientagion
-        #orientation=np.pi-orientation
-        #orientation = np.pi+orientation
         orientation=orientation+np.pi/2
-        print("modified orientation: ")
-        print(orientation)
-    
+ 
     x_M1 = x0 + math.cos(orientation) * 0.5 * (boxLength)
     y_M1 = y0 - math.sin(orientation) * 0.5 * (boxLength)
 
@@ -563,15 +540,9 @@ def SingleCellRegistration(regionStack, ellipseMasks, majorValues, majorExtra,mi
     y_m1 = y0 - math.cos(orientation) * 0.5 * (boxWidth)
 
     x_m2 = x0 + math.sin(orientation) * 0.5 * (boxWidth)
-    y_m2 = y0 + math.cos(orientation) * 0.5 * (boxWidth)
+    y_m2 = y0 + math.cos(orientation) * 0.5 * (boxWidth)  
 
-    ###ax.plot((x0, x_M1), (y0, y_M1), '-r', linewidth=2.5)
-    ###ax.plot((x0, x_M2), (y0, y_M2), '-r', linewidth=2.5)
-    ###ax.plot((x0, x_m1), (y0, y_m1), '-r', linewidth=2.5)
-    ###ax.plot((x0, x_m2), (y0, y_m2), '-r', linewidth=2.5)
-    ###ax.plot(x0, y0, '.g', markersize=15)    
-
-    regionStackRegister = np.zeros([round(boxWidth), round(boxLength), regionStack.shape[2]],dtype =  np.float64)
+    regionStackRegister = np.zeros([round(boxWidth), round(boxLength), regionStack.shape[2]], dtype = np.float64)
     padValues = np.percentile(regionStack, 70)
     ###regionStackRegister = padValues*np.ones([round(boxWidth), round(boxLength), regionStack.shape[2]],dtype =  np.float64)
     
@@ -601,14 +572,12 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
     lenMax_box = 2*np.percentile(majorValues_valid_box,98)
     lenMin_box = 2*np.percentile(majorValues_valid_box,2)
     lenRelaxation_box = 2*np.percentile(majorValues_valid_box,98)
-    
-    
+      
     majorValues_valid = majorValues[(majorValues>np.median(majorValues)*0.5) & (majorValues<np.median(majorValues)*1.5)]
     
     lenMax = 2*np.percentile(majorValues,98)
     lenMin = 2*np.percentile(majorValues,2)
     lenRelaxation = 2*np.percentile(majorValues,98)
-    
 
     frames_relax = 2*majorValues>lenRelaxation
 
@@ -628,7 +597,6 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         inds_ref = np.array(range(np.argmax(majorValues)-2,np.argmax(majorValues)+2))
     else:    
         inds_ref =  np.where(labels_relax == label_ref)[0]
-
 
     videoLen = regionStack.shape[2]
 
@@ -655,7 +623,7 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         
     if display:
 
-        plt.rcParams['figure.figsize'] = [8, 8]
+        ###plt.rcParams['figure.figsize'] = [8, 8]
         fig, (ax1,ax2,ax3) = plt.subplots(3,1)
 
         ###plt.subplot(311)
@@ -680,7 +648,7 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         print('NR: ' + str(NR))
         print('relaxation length: ' + str(lenRelaxation))
 
-        plt.rcParams['figure.figsize'] = [8, 8]
+        ###plt.rcParams['figure.figsize'] = [8, 8]
         fig, (ax1,ax2 )= plt.subplots(2,1)
         ###plt.subplot(211)
         ax1.hist(2*majorValues_valid_box, bins=30)
@@ -692,12 +660,9 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         fig.clf()
         plt.close(fig)
 
-
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         
         fig, (ax1,ax2) = plt.subplots(2,1)
-      
-        ###plt.subplot(211)
         
         ax1.imshow(SC_values_ref)
         ax1.set_xlim(0,SC_values_ref.shape[1])
@@ -713,7 +678,6 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
 
         ax2.set_title("Intensity Similariy PROFILE for REFERENCE FRAMES")
         
-        
         displayFigName3 = dirName +'\\' + videoFileName[:-4]+"_segmentation_cell_"+str(tag)+"_quantification_register_part3.jpg"
         fig.savefig(displayFigName3)
         fig.clf()
@@ -726,7 +690,7 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         peaks1, _ = find_peaks(-speed, height=-minV*0.2,distance=30)
         
         fig, (ax1,ax2)= plt.subplots(2,1)
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         ###plt.subplot(211)
         ax1.plot(length)
         ax1.set_title('LENGTH (Unit: pixel)')
@@ -753,7 +717,6 @@ def estimateTimePoints(videoName, tag, length,speed,peaks,leftBound,rightBound,t
     J_list = []
     I_list = []
    
-    
     (dirName,videoFileName) = os.path.split(videoName) 
     for ii in range(len(leftBound)):
         if leftBound[ii]<5 or rightBound[ii]>len(speed):
@@ -874,11 +837,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     fout.flush()
     fout_r.flush()    
 
-
-    ###for subFolder in subFolders:
-    ###for subFolder in subFolders:
-    outputFolder = rootDir+"\\"+subFolder
-   
+    outputFolder = rootDir+"\\"+subFolder   
     print(outputFolder)
     
     processFolder = outputFolder
@@ -931,7 +890,6 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         majorExtra = 30
         minorExtra = 25
 
-
         speed1 = np.diff(length1)
         maxV1 = np.max(speed1)
         minV1 = np.min(speed1)
@@ -953,8 +911,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         ###         'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
         ###         'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
         ###         'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus') )
-        
-        
+                
         for jj in range(len(As)):       
             writer.writerow((subFolder, tag, As[jj], Bs[jj], Cs[jj], Ds[jj], Es[jj], Fs[jj],Js[jj],Is[jj],
                           speed1[As[jj]],speed1[As[jj]-1],speed1[As[jj]+1],
@@ -983,7 +940,6 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         if 1:
             SegmentationDisplayOutput(cellStack,bounds,ellipseMasks,videoName,tag,register=1,inter = 50)
         
-
         speed = np.diff(length)
         maxV = np.max(speed)
         minV = np.min(speed)
@@ -1001,10 +957,6 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
             As_r, Bs_r, Cs_r, Ds_r, Es_r, Fs_r, Js_r,Is_r = estimateTimePoints(videoName,tag,length,speed,peaks,leftBound,rightBound,th=relax_th,register=1)
         except ValueError:
             As_r,Bs_r,Cs_r,Ds_r,Es_r,Fs_r, Js_r,Is_r = [0],[0],[0],[0],[0],[0],[0],[0]
-        ###writer.writerow( ('subFolder','cellTag', 'A_frame', 'B_frame','C_frame','D_frame','E_frame','F_frame',
-        ###         'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
-        ###         'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
-        ###         'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus') )
         
         
         reg_periods = min(len(As_r),len(Bs_r),len(Cs_r),len(Ds_r),len(Es_r),len(Fs_r),len(Js_r),len(Is_r))
@@ -1033,19 +985,14 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     fout.close()
     
     
-
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate1'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate2'
 
         rotate=1 ## rotate=1 if running on vm test1
  
         cpu_num = 12
         relax_th = 0.7
-
-        ##random_vector = Parallel(n_jobs=2, backend='threads')(delayed(stochastic_function)(10) for _ in range(n_vectors))
-        ##Parallel(n_jobs=num_cores-2, prefer="threads")(delayed(copy_file)(i) for i in inputs)
-
 
         subFolders = sorted(list(listdir_nohidden(rootDir)))
        
