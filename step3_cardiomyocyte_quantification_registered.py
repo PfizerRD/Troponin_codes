@@ -322,7 +322,7 @@ def SegmentationDisplayOutput(regionStack,bounds,ellipseMasks,videoName,tag,regi
         print('The DISPLAY directory is not present. Creating a new one..')
         os.mkdir(outputFolder)
         
-    plt.rcParams['figure.figsize'] = [12, 8]
+    ###plt.rcParams['figure.figsize'] = [12, 8]
     
     for ind in range(0,regionStack.shape[2],inter):
    
@@ -469,7 +469,7 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         ax1.set_title("Intensity Similairy Comparison for REFERENCE FRAMES")
 
         ###plt.subplot(212)
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         SC_baseline_ref = np.mean(SC_values_ref,axis=0)
 
         ax2.plot(SC_baseline_ref)
@@ -489,7 +489,7 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         peaks0, _ = find_peaks(speed, height=maxV*0.2,distance=30)
         peaks1, _ = find_peaks(-speed, height=-minV*0.2,distance=30)
         
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         fig, (ax1,ax2)= plt.subplots(2,1)
         
         ###plt.subplot(211)
@@ -669,7 +669,7 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         ax1.set_title("Intensity Similairy Comparison for REFERENCE FRAMES")
 
         ###plt.subplot(212)
-        plt.rcParams['figure.figsize'] = [12, 8]
+        ###plt.rcParams['figure.figsize'] = [12, 8]
         SC_baseline_ref = np.mean(SC_values_ref,axis=0)
 
         ax2.plot(SC_baseline_ref)
@@ -777,7 +777,7 @@ def estimateTimePoints(videoName, tag, length,speed,peaks,leftBound,rightBound,t
     
     if len(As):
         fig, (ax1,ax2) = plt.subplots(2,1)
-        plt.rcParams['figure.figsize'] = [28, 10]
+        ###plt.rcParams['figure.figsize'] = [28, 10]
         ###plt.subplot(211)
         ax1.plot(length)
         ax1.plot(Is,length[Is], "x")
@@ -997,4 +997,4 @@ if __name__ == "__main__":
         subFolders = sorted(list(listdir_nohidden(rootDir)))
        
         ###CM_pipeline(rootDir,rotate,relax_th,subFolders)
-        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders[84:96])    
