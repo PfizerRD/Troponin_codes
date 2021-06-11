@@ -848,7 +848,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     videoName = videoName0[0]
     
     ## load the box information
-    boxInfoName0 = glob.glob(outputFolder+"\\*boxes.csv")
+    boxInfoName0 = glob.glob(outputFolder+"\\*boxes_automated.csv")
     boxInfoName = boxInfoName0[0]
     ###print(boxInfoName)
 
