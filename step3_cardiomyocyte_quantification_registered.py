@@ -483,7 +483,7 @@ def SingleCellForceCalculation(videoName, imgNames, ind_x1,ind_x2,ind_y1,ind_y2,
         fig.clf()
         plt.close(fig)
 
-        speed = np.diff(length)
+        speed = np.gradient(length)
         maxV = np.max(speed)
         minV = np.min(speed)
         peaks0, _ = find_peaks(speed, height=maxV*0.2,distance=30)
@@ -683,7 +683,7 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
         fig.clf()
         plt.close(fig)
 
-        speed = np.diff(length)
+        speed = np.gradient(length)
         maxV = np.max(speed)
         minV = np.min(speed)
         peaks0, _ = find_peaks(speed, height=maxV*0.2,distance=30)
@@ -890,7 +890,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         majorExtra = 30
         minorExtra = 25
 
-        speed1 = np.diff(length1)
+        speed1 = np.gradient(length1)
         maxV1 = np.max(speed1)
         minV1 = np.min(speed1)
 
@@ -940,7 +940,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         if 1:
             SegmentationDisplayOutput(cellStack,bounds,ellipseMasks,videoName,tag,register=1,inter = 50)
         
-        speed = np.diff(length)
+        speed = np.gradient(length)
         maxV = np.max(speed)
         minV = np.min(speed)
 
