@@ -45,6 +45,9 @@ from skimage.exposure import equalize_adapthist
 from skimage.segmentation import clear_border
 
 from skimage import feature
+import multiprocessing
+from joblib import Parallel, delayed
+import shutil
 
 def cellSegmentation(subfolder,block_size=25,offset=0.02):
 
@@ -93,7 +96,7 @@ def cellSegmentation(subfolder,block_size=25,offset=0.02):
     
     return seg
 
-def movingCellDetection(subfolder,block_size=21,offset=0.015,fps=100.0,interFrame=10):
+def movingCellDetection(subfolder,block_size=21,offset=0.015,fps=100.0,interFrame=5):
 
     ds_time = interFrame 
 
@@ -173,25 +176,8 @@ def imreconstruct(marker, mask, SE=disk(3)):
             break
     return marker
 
-#############################
-#############################
-#############################
-
-rootDir = r'E:\Troponin_programs\Troponin_data\Plate1'
-
-outputFolder = rootDir
-
-if not os.path.isdir(outputFolder):
-    print('The OUTPUT directory is not present. Creating a new one..')
-    os.mkdir(outputFolder)
-        
-subfolders = [os.path.join(rootDir, o) for o in os.listdir(rootDir) if os.path.isdir(os.path.join(rootDir,o))]
-subfolders = sorted(subfolders)
-
-for kk in range(len(subfolders)):
-###for kk in range(1):
-    subfolder = subfolders[kk]
-    
+def auto_annotation(subfolder):
+    print(subfolder)
     cellMask0_mov,_,seg_mov = movingCellDetection(subfolder,block_size=21,offset=0.015)
     seg = cellSegmentation(subfolder,block_size=21,offset=0.015)
 
@@ -229,16 +215,40 @@ for kk in range(len(subfolders)):
     seg_box = binary_dilation(seg_box,disk(2))
     seg_box = seg_box.astype(int)*222
     
-    origImgName = subfolder+"\\tiff\\frame_0001.tif"
+    origImgName = subfolder+"\\tiff\\frame_001.tif"
     origImg = cv2.imread(origImgName)
     origImg[:,:,0] = seg_box
-    outputImageAnnoName = subfolder+"\\frame_0001_auto_annotated.tif"
+    outputImageAnnoName = subfolder+"\\frame_001_auto_annotated.tif"
     cv2.imwrite(outputImageAnnoName, origImg)
     
-    annotationManName = subfolder+"\\frame_0001.tif"
+    annotationManName = subfolder+"\\frame_001.tif"
     if os.path.isfile(annotationManName):
-        outputImageAnnoComName = subfolder+"\\frame_0001_annotationCompare.tif"
+        outputImageAnnoComName = subfolder+"\\frame_001_annotationCompare.tif"
         img_man = cv2.imread(annotationManName)
         img_man[:,:,0] = seg_box
         cv2.imwrite(outputImageAnnoComName, img_man)
     
+
+#############################
+#############################
+#############################
+
+if __name__ == "__main__":
+
+    tic = time.time()
+
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210527MavaSubDataSetAutomation\Plate4_ds'
+
+    outputFolder = rootDir
+
+    if not os.path.isdir(outputFolder):
+        print('The OUTPUT directory is not present. Creating a new one..')
+        os.mkdir(outputFolder)
+            
+    subfolders = [os.path.join(rootDir, o) for o in os.listdir(rootDir) if os.path.isdir(os.path.join(rootDir,o))]
+    subfolders = sorted(subfolders)
+
+    tic = time.time()
+    Parallel(n_jobs=6,prefer='threads')(delayed(auto_annotation)(subfolder) for subfolder in subfolders)  
+    toc = time.time()
+    print('total time is: ' + str(toc-tic))
