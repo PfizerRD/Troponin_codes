@@ -96,7 +96,7 @@ def cellSegmentation(subfolder,block_size=25,offset=0.02):
     
     return seg
 
-def movingCellDetection(subfolder,block_size=21,offset=0.015,fps=100.0,interFrame=5):
+def movingCellDetection(subfolder,block_size=21,offset=0.015,recordTime=5.0,interFrame=10):
 
     ds_time = interFrame 
 
@@ -107,10 +107,6 @@ def movingCellDetection(subfolder,block_size=21,offset=0.015,fps=100.0,interFram
     imageNameRoot0 = dirName
     imageNames = sorted(glob.glob(imageNameRoot))
     imageNum = len(imageNames)
-
-    fps=100.0
-    if imageNum>1500:
-        fps=200.0
         
     kk = 0
     stackLen = len(imageNames)//ds_time
@@ -128,7 +124,7 @@ def movingCellDetection(subfolder,block_size=21,offset=0.015,fps=100.0,interFram
     imgStack.astype(np.float32)
     
     # sample spacing
-    T = 1.0 / stackLen*ds_time
+    T = recordTime / stackLen*ds_time
 
     # Number of sample points
     N = stackLen
@@ -178,7 +174,7 @@ def imreconstruct(marker, mask, SE=disk(3)):
 
 def auto_annotation(subfolder):
     print(subfolder)
-    cellMask0_mov,_,seg_mov = movingCellDetection(subfolder,block_size=21,offset=0.015)
+    cellMask0_mov,_,seg_mov = movingCellDetection(subfolder,block_size=21,offset=0.015,recordTime=5.0)
     seg = cellSegmentation(subfolder,block_size=21,offset=0.015)
 
     seg_active = imreconstruct(seg_mov,seg,SE=disk(5))
@@ -215,7 +211,8 @@ def auto_annotation(subfolder):
     seg_box = binary_dilation(seg_box,disk(2))
     seg_box = seg_box.astype(int)*222
     
-    origImgName = subfolder+"\\tiff\\frame_001.tif"
+    origImgName = subfolder+"\\frame_001.tif"
+    print("origImgName: " + origImgName)
     origImg = cv2.imread(origImgName)
     origImg[:,:,0] = seg_box
     outputImageAnnoName = subfolder+"\\frame_001_auto_annotated.tif"
@@ -237,7 +234,7 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210527MavaSubDataSetAutomation\Plate4_ds'
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_DMSO'
 
     outputFolder = rootDir
 
