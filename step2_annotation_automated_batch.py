@@ -76,14 +76,14 @@ def cellSegmentation(subfolder,block_size=25,offset=0.02):
     cellMask6 = binary_erosion(cellMask5,disk(1))
     cellMask7 = binary_opening(cellMask6,disk(3))
 
-    cellMask8 =  remove_small_objects(cellMask7,200)
+    cellMask8 =  remove_small_objects(cellMask7,100)
    
 
     edges2 = feature.canny(img0[:,:,0], sigma=1.8)
     
     seg = np.logical_and(1-edges2,cellMask8)
     seg = binary_opening(seg,disk(3))
-    seg =  remove_small_objects(seg,800)
+    seg =  remove_small_objects(seg,500)
     seg =  clear_border(seg)
     ##distance = ndi.distance_transform_edt(cellMask9)
     ###coords = peak_local_max(distance, min_distance=3,footprint=np.ones((3, 3)), labels=cellMask9)
@@ -130,12 +130,12 @@ def movingCellDetection(subfolder,block_size=21,offset=0.015,recordTime=5.0,inte
     N = stackLen
     xf = fftfreq(N, T)[:N//2]
 
-    freq_range = np.where((np.array(xf)>0.5) & (np.array(xf)<1.5)) ##only check freqency domain from 0.5hz to 1.5hz
+    freq_range = np.where((np.array(xf)>0.0) & (np.array(xf)<2.5)) ##only check freqency domain from 0.5hz to 1.5hz
     
     imgStackFFT =np.abs(fftn(imgStack, axes=2))
     imgFFTMax= np.max(imgStackFFT[:,:,freq_range[0]],axis=2)
     
-    th_log=np.mean(np.log(imgFFTMax))+2.5*np.std(np.log(imgFFTMax))
+    th_log=np.mean(np.log(imgFFTMax))+2.0*np.std(np.log(imgFFTMax))
     
     ###local_thresh = threshold_local(imgFFTMax, block_size, offset)
     
@@ -145,12 +145,12 @@ def movingCellDetection(subfolder,block_size=21,offset=0.015,recordTime=5.0,inte
     cellMask1 = binary_closing(cellMask0,disk(1))
     cellMask2 = ndi.binary_fill_holes(cellMask1)
     
-    cellMask3 =  remove_small_objects(cellMask2,20)
+    cellMask3 =  remove_small_objects(cellMask2,10)
 
     cellMask4 = binary_closing(cellMask3,disk(2))
     cellMask5 = ndi.binary_fill_holes(cellMask4)
 
-    seg =  remove_small_objects(cellMask5,30)
+    seg =  remove_small_objects(cellMask5,10)
     
     return cellMask0,imgFFTMax,seg
     
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_DMSO'
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_Mavacamten'
 
     outputFolder = rootDir
 
