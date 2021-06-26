@@ -620,7 +620,9 @@ def SingleCellForceCalculationBox(regionBoxStack,regionStack,videoName,tag,displ
     length = lenMin_box+(lenMax_box-lenMin_box)*(length0-np.min(length0))/(np.max(length0)-np.min(length0))
     
     (dirName,videoFileName) = os.path.split(videoName)
-        
+    
+    rawDataFileName = dirName +'\\' + videoFileName[:-4]+ "_cell_"+str(tag) +".npz"
+    np.savez(rawDataFileName,similarity = SC_baseline_ref,length = length)
     if display:
 
         ###plt.rcParams['figure.figsize'] = [8, 8]
@@ -987,14 +989,14 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210527DataSetAnalysis\Plate2'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_DMSO'
 
         rotate=1 ## rotate=1 if running on vm test1
  
-        cpu_num = 12
+        cpu_num = 9
         relax_th = 0.7
 
         subFolders = sorted(list(listdir_nohidden(rootDir)))
        
         ###CM_pipeline(rootDir,rotate,relax_th,subFolders)
-        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders[84:96])    
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(CM_pipeline)(rootDir,rotate,relax_th,subFolder) for subFolder in subFolders)    
