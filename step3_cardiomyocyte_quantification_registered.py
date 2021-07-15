@@ -899,9 +899,9 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         force1 = np.max(length1)-length1
         maxForce1 = np.max(force1)
 
-        peaks1, _ = find_peaks(force1, height=maxForce1*0.3,distance=80)
+        peaks1, _ = find_peaks(force1, height=maxForce1*0.3,distance=40)
 
-        half_width1 = 70 # related to sample freqency
+        half_width1 = 35 # related to sample freqency
         leftBound1 = peaks1-half_width1
         rightBound1 = peaks1+half_width1
 
@@ -949,9 +949,9 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         force = np.max(length)-length
         maxForce = np.max(force)
 
-        peaks, _ = find_peaks(force, height=maxForce*0.3,distance=80)
+        peaks, _ = find_peaks(force, height=maxForce*0.3,distance=40)
 
-        half_width = 70 # related to sample freqency
+        half_width = 35 # related to sample freqency
         leftBound = peaks-half_width
         rightBound = peaks+half_width
         
@@ -989,11 +989,11 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_DMSO'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
 
         rotate=1 ## rotate=1 if running on vm test1
  
-        cpu_num = 9
+        cpu_num = 6
         relax_th = 0.7
 
         subFolders = sorted(list(listdir_nohidden(rootDir)))

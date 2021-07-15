@@ -80,8 +80,8 @@ def longitudinal_annotation_data_configuration(inputSubfolder,outputSubfolder):
  
 if __name__ == "__main__":
 
-    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T0_BeforeDosing_Mavacamten'
-    rootOutputDir = r'Z:\pangj05\TROPONIN2021\20210616DataSetAnalysis\Pairwise\T20_AfterDosing_Mavacamten'
+    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T0'
+    rootOutputDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
  
     inputSubfolders = [os.path.join(rootInputDir, o) for o in os.listdir(rootInputDir) if os.path.isdir(os.path.join(rootInputDir,o))]
     outputSubfolders = [os.path.join(rootOutputDir, o) for o in os.listdir(rootOutputDir) if os.path.isdir(os.path.join(rootOutputDir,o))]

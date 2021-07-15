@@ -18,7 +18,7 @@ import time
 import multiprocessing
 from joblib import Parallel, delayed
 
-DEFAULT_FRAME_NUM = 700
+DEFAULT_FRAME_NUM = 600
 
 def video_generation(subfolder,fps=100.0,interFrame=1):
     print(subfolder)    
@@ -79,7 +79,7 @@ def video_generation(subfolder,fps=100.0,interFrame=1):
 
 if __name__ == "__main__":
 
-    rootDir = r'E:\Troponin_programs\Troponin_data\Plate1'
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
 
     outputFolder = rootDir
 
@@ -93,6 +93,6 @@ if __name__ == "__main__":
     fps = 100.0;
     interFrame = 1
     tic = time.time()
-    Parallel(n_jobs=3,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
+    Parallel(n_jobs=6,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
     toc = time.time()
     print('total time is: ' + str(toc-tic))

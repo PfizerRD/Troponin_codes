@@ -93,10 +93,10 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'E:\Troponin_programs\Troponin_data\step00_debug\source_files\*.tif'
-    outputFolder = r'E:\Troponin_programs\Troponin_data\step00_debug\dest_files_6cpu_move'
+    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210630_Troponin_Pairwise\Plate4_T20\*.tif'
+    outputFolder = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
 
-    cpu_num = 6
+    cpu_num = 2
     if not os.path.isdir(outputFolder):
         print('The OUTPUT directory is not present. Creating a new one..')
         os.mkdir(outputFolder)
