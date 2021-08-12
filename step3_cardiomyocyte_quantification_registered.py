@@ -989,7 +989,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20210729DataSetAnalysis\Plate6_T17'
 
         rotate=1 ## rotate=1 if running on vm test1
  

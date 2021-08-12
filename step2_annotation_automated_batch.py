@@ -48,6 +48,7 @@ from skimage import feature
 import multiprocessing
 from joblib import Parallel, delayed
 import shutil
+import pandas
 
 def cellSegmentation(subfolder,block_size=25,offset=0.02):
 
@@ -234,8 +235,7 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
-
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210715DataSetAnalysis\Plate1_T0'
     outputFolder = rootDir
 
     if not os.path.isdir(outputFolder):
@@ -246,6 +246,6 @@ if __name__ == "__main__":
     subfolders = sorted(subfolders)
 
     tic = time.time()
-    Parallel(n_jobs=6,prefer='threads')(delayed(auto_annotation)(subfolder) for subfolder in subfolders)  
+    Parallel(n_jobs=6,prefer='threads')(delayed(auto_annotation)(subfolder) for subfolder in subfolders[32:36])  
     toc = time.time()
     print('total time is: ' + str(toc-tic))

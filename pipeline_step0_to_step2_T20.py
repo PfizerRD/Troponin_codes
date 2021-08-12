@@ -58,6 +58,8 @@ from skimage import feature
 import multiprocessing
 from joblib import Parallel, delayed
 
+import pandas
+
 DEFAULT_FRAME_NUM = 600
 
 ### STEP00 FUNCTION
@@ -252,10 +254,11 @@ if __name__ == "__main__":
     ### step00
     tic = time.time()
 
-    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210630_Troponin_Pairwise\Plate4_T20\*.tif'
-    outputFolder = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210723_Imaging\Plate5_T20\*.tif'
+    outputFolder = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate5_T20'
 
-    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T0' ### MUST BE T0
+    ### MUST BE T0
+    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate5_T0' ### MUST BE T0
     rootOutputDir = outputFolder
 
     cpu_num_step00 = 2
@@ -274,7 +277,7 @@ if __name__ == "__main__":
     toc1 = time.time()
     print('folder creation time: ' + str(toc1-tic))
 
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
+    Parallel(n_jobs=cpu_num_step00,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
     toc2 = time.time()
     print("copy/moving all frames time: " + str(toc2-toc1))
     

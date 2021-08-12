@@ -371,8 +371,11 @@ if __name__ == "__main__":
     ### step00
     tic = time.time()
 
-    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210630_Troponin_Pairwise\Plate4_T20\*.tif'
-    outputFolder = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210729_Imaging\Plate6_T17\*.tif'
+    outputFolder = r'Z:\pangj05\TROPONIN2021\20210729DataSetAnalysis\Plate6_T17'
+
+    ###rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210723_Imaging\Plate6_T0\*.tif'
+    ###outputFolder = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate6_T0
 
     cpu_num_step00 = 2
     cpu_num_step01 = 4
@@ -389,7 +392,7 @@ if __name__ == "__main__":
     toc1 = time.time()
     print('folder creation time: ' + str(toc1-tic))
 
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
+    Parallel(n_jobs=cpu_num_step00,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
     toc2 = time.time()
     print("copy/moving all frames time: " + str(toc2-toc1))
     
