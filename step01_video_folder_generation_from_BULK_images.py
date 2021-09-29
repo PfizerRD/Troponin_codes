@@ -79,7 +79,7 @@ def video_generation(subfolder,fps=100.0,interFrame=1):
 
 if __name__ == "__main__":
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+    rootDir = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_Troponin2021\DataSet0719\Plate29_T120'
 
     outputFolder = rootDir
 

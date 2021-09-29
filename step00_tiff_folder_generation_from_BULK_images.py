@@ -51,8 +51,9 @@ def tiff_folder_generation(outputFolder,imageName):
         return
 
     (dirName,tiffFileName) = os.path.split(imageName)
+
     subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
-    frameName0=re.split('_s\d\dt',tiffFileName)[1]
+    frameName0=re.split('_s\d{2,3}t',tiffFileName)[1]
     frameName="frame_"+re.split('_ORG',frameName0)[0]
 
     outputSubFolder = outputFolder+'\\' + subfolderName
@@ -93,8 +94,8 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210630_Troponin_Pairwise\Plate4_T20\*.tif'
-    outputFolder = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+    rootDir = r'Z:\techcenter-omtc\Projects\RDRU_Mybpc3\Data4PipelineTesting\Basal\*.tif'
+    outputFolder = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_Troponin2021\Pipeline_testing\Basal'
 
     cpu_num = 2
     if not os.path.isdir(outputFolder):
