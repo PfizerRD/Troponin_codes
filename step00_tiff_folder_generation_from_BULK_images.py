@@ -94,16 +94,17 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\techcenter-omtc\Projects\RDRU_Mybpc3\Data4PipelineTesting\Basal\*.tif'
-    outputFolder = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_Troponin2021\Pipeline_testing\Basal'
+    rootDir = r'Z:\techcenter-omtc\Projects\RDRU_Mybpc3\211011_IPSC_Pilot_Data\Export\211011_Brandon_IPSC_Plate1\*.tif'
+    outputFolder = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_MYBPC3_2021\Pilot20211011\IPSC_Plate1'
 
-    cpu_num = 2
+    cpu_num = 4
     if not os.path.isdir(outputFolder):
         print('The OUTPUT directory is not present. Creating a new one..')
         os.mkdir(outputFolder)
         
     imageNames = sorted(glob.glob(rootDir))
 
+    print("image number: " + str(len(imageNames)))
     ## have to set to single core to run to avoid folder/directory overwriting conflicts
     Parallel(n_jobs=1,prefer='threads')(delayed(folder_creation)(outputFolder,imageName) for imageName in imageNames)   
     toc1 = time.time()

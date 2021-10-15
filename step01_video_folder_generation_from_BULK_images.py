@@ -79,7 +79,7 @@ def video_generation(subfolder,fps=100.0,interFrame=1):
 
 if __name__ == "__main__":
 
-    rootDir = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_Troponin2021\DataSet0719\Plate29_T120'
+    rootDir = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_MYBPC3_2021\Pilot20211011\IPSC_Plate1'
 
     outputFolder = rootDir
 
@@ -93,6 +93,6 @@ if __name__ == "__main__":
     fps = 100.0;
     interFrame = 1
     tic = time.time()
-    Parallel(n_jobs=6,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
+    Parallel(n_jobs=8,prefer='threads')(delayed(video_generation)(subfolder,fps,interFrame) for subfolder in subfolders)  
     toc = time.time()
     print('total time is: ' + str(toc-tic))
