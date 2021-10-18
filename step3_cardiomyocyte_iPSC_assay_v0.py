@@ -86,7 +86,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     writer = csv.writer(fout)
 
-    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
+    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value') )
         
     fout.flush()  
     
@@ -120,9 +120,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
         SC_values_ref[ii-1] = SimilarityComparison(frame_ref, frame2)
 
-        prvs_s = gaussian(prvs, sigma = 1)
-        next_s = gaussian(next, sigma = 1)
+        ###prvs_s = gaussian(prvs, sigma = 1)
+        ###next_s = gaussian(next, sigma = 1)
 
+        prvs_s = prvs
+        next_s = next
         ###flow_d = next_s-prvs_s
         flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, .5, 3, 15, 3, 5, 1.2, 0)
 
@@ -142,16 +144,16 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.7,distance=10)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.7,distance=10)
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.85,distance=30)
+    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.85,distance=30)
 
     SC_inv_height = np.max(1-SC_values_ref[:-20])
-    dist_peak, _ = find_peaks(1-SC_values_ref[:-20], height=  SC_inv_height*0.8,distance=100)
+    dist_peak, _ = find_peaks(1-SC_values_ref[:-20], height=  SC_inv_height*0.85,distance=100)
     
     
     fig, (ax1,ax2,ax3) = plt.subplots(3,1)
 
-    ax1.plot(1-SC_values_ref[:-1])
+    ax1.plot(1-SC_values_ref[:-20])
     ax1.plot(dist_peak,1-SC_values_ref[dist_peak],"*")
     ###ax = plt.subplot(132)
     ax2.plot(SC_diff)
@@ -200,16 +202,20 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     B_list = []
 
     half_width1 = 51 # related to sample freqency
+    ###leftBound1 = dist_peak-half_width1
     leftBound1 = dist_peak-half_width1
-    rightBound1 = dist_peak+2
+    ###rightBound1 = dist_peak+5
+    rightBound1 = dist_peak
 
-    half_width2 = 91 # related to sample freqency
-    leftBound2 = dist_peak+10
+    half_width2 = 71 # related to sample freqency
+    ###leftBound2 = dist_peak+10
+    ###rightBound2 = dist_peak+half_width2
+    leftBound2 = dist_peak+15
     rightBound2 = dist_peak+half_width2
 
 
     for ii in range(len(leftBound1)):
-        if leftBound1[ii]<5 or rightBound1[ii]>len(flow_trace)-20:
+        if leftBound1[ii]<5 or rightBound1[ii]>len(flow_trace)-40:
             continue
 
         maxV = np.max(flow_trace[leftBound1[ii]:rightBound1[ii]])
@@ -217,7 +223,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         A_list.append(neg_ind)
 
     for ii in range(len(leftBound2)):
-        if leftBound2[ii]<5 or rightBound2[ii]>len(flow_trace)-20:
+        if leftBound2[ii]<5 or rightBound2[ii]>len(flow_trace)-40:
             continue
 
         maxV = np.max(flow_trace[leftBound2[ii]:rightBound2[ii]])
@@ -229,9 +235,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     print(As)
     print(Bs)
 
-    reg_periods = min(len(As),len(Bs))
+    reg_periods = min(len(As),len(Bs),len(SC_diff_pos),len(SC_diff_neg))
     for mm in range(reg_periods-1):
-        writer.writerow((videoFileName, As[mm], Bs[mm]))
+        ## writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
+        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]]))
 
     fout.flush()
     fout.close()
@@ -274,9 +281,9 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
+    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_selected'
 
-    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output'
+    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_selected_output'
 
     subfolders = list(listdir_nohidden(RootPath))
  
@@ -287,7 +294,7 @@ if __name__ == "__main__":
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[0:8])   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
 
 
 
