@@ -79,7 +79,16 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     else:    
             print("Directory " , OutputPath ,  " already exists")
 
-           
+
+    csvOutputName =OutputPath+"\\"+videoFileName+"_endpoints.csv"
+  
+    fout = open(csvOutputName, 'w', newline='')
+
+    writer = csv.writer(fout)
+
+    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
+        
+    fout.flush()  
     
     imageNameRoot =  subfolder  + "\\tiff\\*.tif"
     
@@ -114,14 +123,6 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         prvs_s = gaussian(prvs, sigma = 1)
         next_s = gaussian(next, sigma = 1)
 
-        ##prvs_s = prvs
-        ##next_s = next
-        ##prvs_s = exposure.adjust_gamma(prvs_s, 1)
-        ##next_s = exposure.adjust_gamma(next_s, 1)
-
-        ##prvs_s = exposure.adjust_log(prvs, 5)
-        ##next_s = exposure.adjust_log(next, 5)
-
         ###flow_d = next_s-prvs_s
         flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, .5, 3, 15, 3, 5, 1.2, 0)
 
@@ -129,15 +130,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         hsv[...,0] = ang*180/np.pi/2
         hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
         hsv[...,2] = mag*10
-        #print(np.max(mag))
-        ###bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
-        ###vis = draw_flow(next_s, flow*10)
 
         magStack[:,:,ii] = mag
 
         if ii%100==0:
             print(ii)
-
         prvs = next
         
     SC_diff = (np.gradient(SC_values_ref[:-20]))
@@ -232,6 +229,14 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     print(As)
     print(Bs)
 
+    reg_periods = min(len(As),len(Bs))
+    for mm in range(reg_periods-1):
+        writer.writerow((videoFileName, As[mm], Bs[mm]))
+
+    fout.flush()
+    fout.close()
+
+
     fig, (ax1,ax2) = plt.subplots(2,1)
     plt.rcParams['figure.figsize'] = [18, 18]
             ###plt.subplot(211)
@@ -275,14 +280,14 @@ if __name__ == "__main__":
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 6
+    cpu_num = 8
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[0:8])   
 
 
 
