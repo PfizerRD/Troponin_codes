@@ -156,21 +156,22 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     thresh = np.percentile(magSum,80)
     mask = magSum>1*thresh
 
-    cellMask1 = binary_closing(mask,disk(1))
-    cellMask2 = ndi.binary_fill_holes(cellMask1)
-    cellMask3 =  remove_small_objects(cellMask2,200)
+    ###cellMask1 = binary_closing(mask,disk(1))
+    ###cellMask2 = ndi.binary_fill_holes(cellMask1)
+    ###cellMask3 =  remove_small_objects(cellMask2,200)
 
-    cellMask4 = binary_closing(cellMask3,disk(2))
-    cellMask5 = ndi.binary_fill_holes(cellMask4)
-    cellMask6 = binary_erosion(cellMask5,disk(1))
-    cellMask7 = binary_opening(cellMask6,disk(3))
+    ###cellMask4 = binary_closing(cellMask3,disk(2))
+    ###cellMask5 = ndi.binary_fill_holes(cellMask4)
+    ###cellMask6 = binary_erosion(cellMask5,disk(1))
+    ###cellMask7 = binary_opening(cellMask6,disk(3))
 
-    cellMask8 =  remove_small_objects(cellMask7,400)
-    cellMask9 = clear_border(cellMask8)
-    cellMask9 = getLargestCC(cellMask9)
+    ###cellMask8 =  remove_small_objects(cellMask7,400)
+    ###cellMask9 = clear_border(cellMask8)
+    ###cellMask9 = getLargestCC(cellMask9)
 
-    mask_label = label(cellMask9)
-    
+    ###mask_label = label(cellMask9)
+    mask_label = label(mask)
+
     ###for jj in range(0,1):# just one object
     mask_region = (mask_label>0)
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
@@ -246,8 +247,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     ax1.imshow(img_masked)
     ax2.plot(flow_trace[1:-10],linewidth=2)
-    ax2.plot(As,flow_trace[As], "x",markersize=8)
-    ax2.plot(Bs,flow_trace[Bs], "d", markersize=8)
+    if len(As)>0:
+        ax2.plot(As,flow_trace[As], "x",markersize=8)
+    if len(Bs)>0:
+        ax2.plot(Bs,flow_trace[Bs], "d", markersize=8)
     ax2.plot(dist_peak,flow_trace[dist_peak],'*', markersize=8)
     ax2.plot(SC_diff_pos,flow_trace[SC_diff_pos],'*', markersize=8)
     ax2.plot(SC_diff_neg,flow_trace[SC_diff_neg],'*', markersize=8)
@@ -274,20 +277,20 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_selected'
+    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate1'
 
-    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_selected_output'
+    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 12
+    cpu_num = 9
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[40:])   
 
 
 
