@@ -86,7 +86,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     writer = csv.writer(fout)
 
-    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value') )
+    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value','Optical_Flow_baseline(5%)') )
         
     fout.flush()  
     
@@ -146,6 +146,12 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.85,distance=30)
     SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.85,distance=30)
+
+    ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
+    if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
+        if abs(SC_diff_neg[0]-SC_diff_pos[0])>abs(SC_diff_neg[1]-SC_diff_pos[0]):
+            SC_diff_neg=SC_diff_neg[1:]
+
 
     SC_inv_height = np.max(1-SC_values_ref[:-10])
     dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.85,distance=100)
@@ -222,7 +228,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     reg_periods = min(len(As),len(Bs),len(SC_diff_pos),len(SC_diff_neg))
     for mm in range(reg_periods):
         ## writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
-        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]]))
+        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]],np.percentile(flow_trace,5)))
 
     fout.flush()
     fout.close()
@@ -279,18 +285,18 @@ if __name__ == "__main__":
 
     RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate1'
 
-    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output'
+    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output_update'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 9
+    cpu_num = 4
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[40:])   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
 
 
 
