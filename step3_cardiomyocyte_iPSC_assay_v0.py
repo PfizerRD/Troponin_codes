@@ -68,6 +68,10 @@ def SimilarityComparison(img10, img20):
     
     return SC
 
+#### Contraction<-> A
+#### Relaxation <-> B
+#### Contraction comes first and peak is higher than that of Relaxation
+
 def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
    
     subfolder = RootPath + "\\" + subfolder
@@ -86,7 +90,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     writer = csv.writer(fout)
 
-    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value','Optical_Flow_baseline(5%)') )
+    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value','OpticalFlow_baseline') )
         
     fout.flush()  
     
@@ -152,6 +156,14 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         if abs(SC_diff_neg[0]-SC_diff_pos[0])>abs(SC_diff_neg[1]-SC_diff_pos[0]):
             SC_diff_neg=SC_diff_neg[1:]
 
+    ### added in 10/21 to make sure pos (contraction) comes first than that of neg (relaxation)
+
+    if len(SC_diff_neg)>0 and len(SC_diff_pos)>0:
+        if SC_diff_pos[0]>SC_diff_neg[0]:
+            tmp = SC_diff_pos
+            SC_diff_pos = SC_diff_neg
+            SC_diff_neg = tmp
+
 
     SC_inv_height = np.max(1-SC_values_ref[:-10])
     dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.85,distance=100)
@@ -159,7 +171,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     
     ###thresh = threshold_otsu(magSum)
     magSum = np.max(magStack,axis=2)
-    thresh = np.percentile(magSum,80)
+    thresh = np.percentile(magSum,50)
     mask = magSum>1*thresh
 
     ###cellMask1 = binary_closing(mask,disk(1))
@@ -254,12 +266,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     ax1.imshow(img_masked)
     ax2.plot(flow_trace[1:-10],linewidth=2)
     if len(As)>0:
-        ax2.plot(As,flow_trace[As], "x",markersize=8)
+        ax2.plot(As,flow_trace[As], "o",markersize=8)
     if len(Bs)>0:
-        ax2.plot(Bs,flow_trace[Bs], "d", markersize=8)
-    ax2.plot(dist_peak,flow_trace[dist_peak],'*', markersize=8)
-    ax2.plot(SC_diff_pos,flow_trace[SC_diff_pos],'*', markersize=8)
-    ax2.plot(SC_diff_neg,flow_trace[SC_diff_neg],'*', markersize=8)
+        ax2.plot(Bs,flow_trace[Bs], "x", markersize=8)
+    ###ax2.plot(SC_diff_pos,flow_trace[SC_diff_pos],'o', markersize=8)
+    ###ax2.plot(SC_diff_neg,flow_trace[SC_diff_neg],'x', markersize=8)
 
 
     ax3.plot(1-SC_values_ref[:-10],linewidth=2)
@@ -283,13 +294,13 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate1'
+    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
 
-    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output_update'
+    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output_update'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 4
+    cpu_num = 2
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
