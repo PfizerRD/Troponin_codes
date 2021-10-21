@@ -828,13 +828,15 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                       'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
                       'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
                       'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus',
-                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num') )
+                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num',
+                      'major_axis.mean','major_axis.sd','minor_axis.mean','minor_axis.sd') )
 
     writer_r.writerow( ('subFolder','cellTag', 'A_frame', 'B_frame','C_frame','D_frame','E_frame','F_frame','J_frame','I_frame',
                       'A_value','A_value_minus','A_value_plus','B_value','B_Value_minus','B_value_plus',
                       'C_value','C_value_minus','C_value_plus','D_value','D_Value_minus','D_value_plus',
                       'E_value','E_value_minus','E_value_plus','F_value','F_Value_minus','F_value_plus',
-                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num') )
+                      'J_value','J_value_minus','J_value_plus','I_value','I_Value_minus','I_value_plus','total_frame_num',
+                      'major_axis.mean','major_axis.sd','minor_axis.mean','minor_axis.sd') )
         
     fout.flush()
     fout_r.flush()    
@@ -889,6 +891,11 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
         if 1:
             SegmentationDisplayOutput(regionStack1,bounds1,ellipseMasks1,videoName,tag,register=0,inter = 50)
 
+        major_axis_mean = np.nanmean(majorValues1)
+        minor_axis_mean = np.nanmean(minorValues1)
+        major_axis_sd = np.nanstd(majorValues1)
+        minor_axis_sd = np.nanstd(minorValues1)
+            
         majorExtra = 30
         minorExtra = 25
 
@@ -923,7 +930,8 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                           speed1[Es[jj]],speed1[Es[jj]-1],speed1[Es[jj]+1],
                           speed1[Fs[jj]],speed1[Fs[jj]-1],speed1[Fs[jj]+1],
                           length1[Js[jj]],length1[Js[jj]-1],length1[Js[jj]+1],
-                          length1[Is[jj]],length1[Is[jj]-1],length1[Is[jj]+1],frameNum))
+                          length1[Is[jj]],length1[Is[jj]-1],length1[Is[jj]+1],frameNum,
+                          major_axis_mean,major_axis_sd,minor_axis_mean,minor_axis_sd))
     
         ####
         #### registered
@@ -971,7 +979,8 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
                           speed[Es_r[jj]],speed[Es_r[jj]-1],speed[Es_r[jj]+1],
                           speed[Fs_r[jj]],speed[Fs_r[jj]-1],speed[Fs_r[jj]+1],
                           length[Js_r[jj]],length[Js_r[jj]-1],length[Js_r[jj]+1],
-                          length[Is_r[jj]],length[Is_r[jj]-1],length[Is_r[jj]+1],frameNum))
+                          length[Is_r[jj]],length[Is_r[jj]-1],length[Is_r[jj]+1],frameNum,
+                          major_axis_mean,major_axis_sd,minor_axis_mean,minor_axis_sd))
             
 
         del(cellMasks1)
@@ -989,7 +998,7 @@ def CM_pipeline(rootDir,rotate,relax_th,subFolder):
     
 if __name__ == "__main__":
 
-        rootDir = r'Z:\pangj05\TROPONIN2021\20210729DataSetAnalysis\Plate6_T17'
+        rootDir = r'Z:\pangj05\TROPONIN2021\20211015DataSetAnalysis\Plate6_T20'
 
         rotate=1 ## rotate=1 if running on vm test1
  

@@ -371,8 +371,8 @@ if __name__ == "__main__":
     ### step00
     tic = time.time()
 
-    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210729_Imaging\Plate6_T17\*.tif'
-    outputFolder = r'Z:\pangj05\TROPONIN2021\20210729DataSetAnalysis\Plate6_T17'
+    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\211015_ZSF1_Imaging\Plate6_T0\*.tif'
+    outputFolder = r'Z:\pangj05\TROPONIN2021\20211015DataSetAnalysis\Plate6_T0'
 
     ###rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210723_Imaging\Plate6_T0\*.tif'
     ###outputFolder = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate6_T0

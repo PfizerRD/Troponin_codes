@@ -80,8 +80,8 @@ def longitudinal_annotation_data_configuration(inputSubfolder,outputSubfolder):
  
 if __name__ == "__main__":
 
-    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T0'
-    rootOutputDir = r'Z:\pangj05\TROPONIN2021\20210630DataSetAnalysis\Plate4_T20'
+    rootInputDir =  r'Z:\pangj05\TROPONIN2021\20210825DataSetAnalysis\Plate6_T0'
+    rootOutputDir = r'Z:\pangj05\TROPONIN2021\20210825DataSetAnalysis\Plate6_T20'
  
     inputSubfolders = [os.path.join(rootInputDir, o) for o in os.listdir(rootInputDir) if os.path.isdir(os.path.join(rootInputDir,o))]
     outputSubfolders = [os.path.join(rootOutputDir, o) for o in os.listdir(rootOutputDir) if os.path.isdir(os.path.join(rootOutputDir,o))]
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     
     tic = time.time()
     for ii in range(len(inputSubfolders)):
-    ###for ii in range(2):
+    ###for ii in range(15,len(inputSubfolders)):
         longitudinal_annotation_data_configuration(inputSubfolders[ii],outputSubfolders[ii])
     toc = time.time()
     print('total time is: ' + str(toc-tic))

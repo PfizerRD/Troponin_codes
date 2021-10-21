@@ -254,11 +254,11 @@ if __name__ == "__main__":
     ### step00
     tic = time.time()
 
-    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\210723_Imaging\Plate5_T20\*.tif'
-    outputFolder = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate5_T20'
+    rootDir = r'P:\techcenter-omtc\Projects\IMRU_Troponin\211015_ZSF1_Imaging\Plate6_T20\*.tif'
+    outputFolder = r'Z:\pangj05\TROPONIN2021\20211015DataSetAnalysis\Plate6_T20'
 
     ### MUST BE T0
-    rootInputDir = r'Z:\pangj05\TROPONIN2021\20210723DataSetAnalysis\Plate5_T0' ### MUST BE T0
+    rootInputDir = r'Z:\pangj05\TROPONIN2021\20211015DataSetAnalysis\Plate6_T0' ### MUST BE T0
     rootOutputDir = outputFolder
 
     cpu_num_step00 = 2

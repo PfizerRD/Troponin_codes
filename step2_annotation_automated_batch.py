@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\pangj05\TROPONIN2021\20210715DataSetAnalysis\Plate1_T0'
+    rootDir = r'Z:\pangj05\TROPONIN2021\20210825DataSetAnalysis\Plate6_T0'
     outputFolder = rootDir
 
     if not os.path.isdir(outputFolder):
@@ -246,6 +246,6 @@ if __name__ == "__main__":
     subfolders = sorted(subfolders)
 
     tic = time.time()
-    Parallel(n_jobs=6,prefer='threads')(delayed(auto_annotation)(subfolder) for subfolder in subfolders[32:36])  
+    Parallel(n_jobs=6,prefer='threads')(delayed(auto_annotation)(subfolder) for subfolder in subfolders)  
     toc = time.time()
     print('total time is: ' + str(toc-tic))
