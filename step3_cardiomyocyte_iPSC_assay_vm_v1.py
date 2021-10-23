@@ -85,13 +85,9 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
 
     csvOutputName =OutputPath+"\\"+videoFileName+"_endpoints.csv"
-  
     fout = open(csvOutputName, 'w', newline='')
-
     writer = csv.writer(fout)
-
     writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value','OpticalFlow_baseline') )
-        
     fout.flush()  
     
     imageNameRoot =  subfolder  + "\\tiff\\*.tif"
@@ -114,6 +110,15 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     angStack = np.zeros([hei, wid, int(imageNum)-1],dtype =  np.float32)
     SC_values_ref = np.zeros(int(imageNum)-1)
     
+
+    videoOut = OutputPath+"\\"+videoFileName + '_opticalFlow.avi'
+    print(videoOut)
+
+    fps = 20
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
+
+
     for ii in range(1,imageNum-1):
 
         img2 = cv2.imread(imageNames[ii])
@@ -129,27 +134,37 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
         prvs_s = prvs
         next_s = next
-        ###flow_d = next_s-prvs_s
+      
         flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, .5, 3, 15, 3, 5, 1.2, 0)
+        ###flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, pyr_scale = 0.5, levels = 5, winsize = 11, iterations = 5, poly_n = 5, poly_sigma = 1.1, flags = 0)
 
         mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
         hsv[...,0] = ang*180/np.pi/2
-        hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-        hsv[...,2] = mag*10
+        #hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
+        hsv[...,2] = mag*500
+        #print(np.max(mag))
+        bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+        vis = draw_flow(next, flow*100)
 
         magStack[:,:,ii] = mag
 
         if ii%100==0:
             print(ii)
         prvs = next
+
+        frame_final = np.concatenate((bgr,vis),axis=1)
+        VideoOutput.write(frame_final)
+
+    VideoOutput.release()    
+    cv2.destroyAllWindows()
         
     SC_diff = (np.gradient(SC_values_ref[:-10]))
 
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.85,distance=30)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.85,distance=30)
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.80,distance=30)
+    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.80,distance=30)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -166,7 +181,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
 
     SC_inv_height = np.max(1-SC_values_ref[:-10])
-    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.85,distance=100)
+    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.80,distance=100)
     
     
     ###thresh = threshold_otsu(magSum)
@@ -174,20 +189,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     thresh = np.percentile(magSum,50)
     mask = magSum>1*thresh
 
-    ###cellMask1 = binary_closing(mask,disk(1))
-    ###cellMask2 = ndi.binary_fill_holes(cellMask1)
-    ###cellMask3 =  remove_small_objects(cellMask2,200)
 
-    ###cellMask4 = binary_closing(cellMask3,disk(2))
-    ###cellMask5 = ndi.binary_fill_holes(cellMask4)
-    ###cellMask6 = binary_erosion(cellMask5,disk(1))
-    ###cellMask7 = binary_opening(cellMask6,disk(3))
-
-    ###cellMask8 =  remove_small_objects(cellMask7,400)
-    ###cellMask9 = clear_border(cellMask8)
-    ###cellMask9 = getLargestCC(cellMask9)
-
-    ###mask_label = label(cellMask9)
     mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
@@ -295,13 +297,13 @@ if __name__ == "__main__":
     ds = 2
 
     ###RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate1'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_selected'
 
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output_update_vm'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_selected_output'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 16
+    cpu_num = 2
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
