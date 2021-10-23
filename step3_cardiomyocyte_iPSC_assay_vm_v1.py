@@ -114,11 +114,12 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     videoOut = OutputPath+"\\"+videoFileName + '_opticalFlow.avi'
     print(videoOut)
 
-    fps = 20
+    fps = 50
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
 
 
+    ###for ii in range(1,imageNum-1):
     for ii in range(1,imageNum-1):
 
         img2 = cv2.imread(imageNames[ii])
@@ -141,10 +142,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
         hsv[...,0] = ang*180/np.pi/2
         #hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-        hsv[...,2] = mag*500
+        hsv[...,2] = mag*380
         #print(np.max(mag))
         bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
-        vis = draw_flow(next, flow*100)
+        vis = draw_flow(next, flow*80)
 
         magStack[:,:,ii] = mag
 
@@ -297,13 +298,13 @@ if __name__ == "__main__":
     ds = 2
 
     ###RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_selected'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
 
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_selected_output'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output_50hz'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 2
+    cpu_num = 6
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
