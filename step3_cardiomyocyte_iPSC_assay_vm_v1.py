@@ -300,7 +300,7 @@ if __name__ == "__main__":
     ###RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
     RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
 
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output_50hz'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output'
 
     subfolders = list(listdir_nohidden(RootPath))
  
