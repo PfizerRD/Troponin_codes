@@ -294,13 +294,14 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
+    ###RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate1'
 
-    OutputPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011_plate2_output_update'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Pilot20211011_plate1_output_update_vm'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 2
+    cpu_num = 16
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
