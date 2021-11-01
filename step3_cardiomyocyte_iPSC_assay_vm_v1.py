@@ -87,7 +87,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     csvOutputName =OutputPath+"\\"+videoFileName+"_endpoints.csv"
     fout = open(csvOutputName, 'w', newline='')
     writer = csv.writer(fout)
-    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_A_value','Correlation_diff_B_value','OpticalFlow_baseline') )
+    writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_diff_A_index','Correlation_diff_B_index','Correlation_diff_C_index','Correlation_diff_D_index','Correlation_diff_A_value','Correlation_diff_B_value','OpticalFlow_baseline') )
     fout.flush()  
     
     imageNameRoot =  subfolder  + "\\tiff\\*.tif"
@@ -187,28 +187,28 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     
     ###thresh = threshold_otsu(magSum)
     magSum = np.max(magStack,axis=2)
-    thresh = np.percentile(magSum,30)
+    thresh = np.percentile(magSum,50)
     mask = magSum>1*thresh
 
-    cellMask1 = binary_closing(mask,disk(1))
-    cellMask2 = ndi.binary_fill_holes(cellMask1)
-    cellMask3 =  remove_small_objects(cellMask2,200)
+    ###cellMask1 = binary_closing(mask,disk(1))
+    ###cellMask2 = ndi.binary_fill_holes(cellMask1)
+    ###cellMask3 =  remove_small_objects(cellMask2,200)
 
-    cellMask4 = binary_closing(cellMask3,disk(2))
-    cellMask5 = ndi.binary_fill_holes(cellMask4)
-    cellMask6 = binary_erosion(cellMask5,disk(1))
-    cellMask7 = binary_opening(cellMask6,disk(3))
+    ###cellMask4 = binary_closing(cellMask3,disk(2))
+    ###cellMask5 = ndi.binary_fill_holes(cellMask4)
+    ###cellMask6 = binary_erosion(cellMask5,disk(1))
+    ###cellMask7 = binary_opening(cellMask6,disk(3))
 
-    cellMask8 =  remove_small_objects(cellMask7,200)
-    cellMask9 = clear_border(cellMask8)
-    cellMask9 = getLargestCC(cellMask9)
+    ###cellMask8 =  remove_small_objects(cellMask7,200)
+    ###cellMask9 = clear_border(cellMask8)
+    ###cellMask9 = getLargestCC(cellMask9)
 
-    mask_label = label(cellMask9)
+    ###mask_label = label(cellMask9)
 
-    ###mask_label = label(mask)
+    mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
-    mask_region = (mask_label==1)
+    mask_region = (mask_label>0)
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
     mask_region_size = np.sum(mask_region)
     print(mask_region_size)
@@ -218,7 +218,9 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
     A_list = []
+    C_list = []
     B_list = []
+    D_list = []
 
     half_width1 = 7 # related to sample freqency
     leftBound1 = SC_diff_pos-half_width1
@@ -233,13 +235,26 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     ###rightBound2 = dist_peak+half_width2
 
 
+    sideHalfWidth = 15
+
+    front_start = -1
+    back_end = -1
     for jj in range(len(leftBound1)):
         if leftBound1[jj]<5 or rightBound1[jj]>len(flow_trace)-20:
             continue
 
         maxV = np.max(flow_trace[leftBound1[jj]:rightBound1[jj]])
         neg_ind = leftBound1[jj]+np.argmax(flow_trace[leftBound1[jj]:rightBound1[jj]])
+
+        ###if jj == 1:
+        ###    sideHalfWidth = int(np.min(abs(dist_peak-neg_ind))+3)
+
+        if neg_ind-sideHalfWidth>5:
+            front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
+            ###front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
+
         A_list.append(neg_ind)
+        C_list.append(front_start)
 
     for jj in range(len(leftBound2)):
         if leftBound2[jj]<5 or rightBound2[jj]>len(flow_trace)-20:
@@ -247,17 +262,27 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
         maxV = np.max(flow_trace[leftBound2[jj]:rightBound2[jj]])
         pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
+
+        back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
+
         B_list.append(pos_ind)
+        D_list.append(back_end)
+
 
     As = np.array(A_list)
     Bs = np.array(B_list)
+    Cs = np.array(C_list)
+    Ds = np.array(D_list)
+    
     print(As)
     print(Bs)
+    print(Cs)
+    print(Ds)
 
     reg_periods = min(len(As),len(Bs),len(SC_diff_pos),len(SC_diff_neg))
     for mm in range(reg_periods):
         ## writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
-        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]],np.percentile(flow_trace,5)))
+        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], Cs[mm], Ds[mm],SC_diff_neg[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]],np.percentile(flow_trace,5)))
 
     fout.flush()
     fout.close()
@@ -297,6 +322,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     ax4.plot(SC_diff_pos,abs(SC_diff[SC_diff_pos]),"o", markersize=8)
     ax4.plot(SC_diff_neg,abs(SC_diff[SC_diff_neg]),"x", markersize=8)
     ax4.plot(dist_peak,abs(SC_diff[dist_peak]),"*")
+
+    if len(Cs)>0:
+        ax4.plot(Cs,abs(SC_diff[Cs]),">")
+    if len(Ds)>0:
+        ax4.plot(Ds,abs(SC_diff[Ds]),"<")
     
     displayFigureName2 = OutputPath+"\\"+videoFileName+"_result.png"
     print(displayFigureName2)
@@ -311,14 +341,15 @@ if __name__ == "__main__":
 
     ds = 2
 
-    ###RootPath = 'Y:\\RDRU_MYBPC3_2021\\Pilot20211011\\IPSC_Plate2'
-    RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\Plates1_2'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\Plate1_2_output1031'
+    ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
+    ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 3
+    cpu_num = 1
  
 
     subFolders = sorted(list(listdir_nohidden(RootPath)))
