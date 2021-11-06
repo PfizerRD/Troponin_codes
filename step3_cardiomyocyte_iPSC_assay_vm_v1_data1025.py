@@ -194,8 +194,8 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.75,distance=40)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=40)
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.75,distance=80)
+    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=80)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -212,7 +212,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
 
     SC_inv_height = np.max(1-SC_values_ref[:-10])
-    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=100)
+    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=80)
     
     
     ###thresh = threshold_otsu(magSum)
@@ -239,7 +239,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
-    mask_region = (mask_label>0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
+    mask_region = (mask_label==0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
 
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
     mask_region_size = np.sum(mask_region)
@@ -254,15 +254,15 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     B_list = []
     D_list = []
 
-    half_width1 = 7 # related to sample freqency
+    half_width1 = 5 # related to sample freqency
     leftBound1 = SC_diff_pos-half_width1
     ###leftBound1 = dist_peak-half_width1
     rightBound1 = SC_diff_pos+half_width1
     ###rightBound1 = dist_peak
 
-    half_width2 = 11 # related to sample freqency
+    half_width2 = 3 # related to sample freqency
     leftBound2 = SC_diff_neg-half_width2
-    rightBound2 = SC_diff_neg+half_width2
+    rightBound2 = SC_diff_neg+half_width2+7
     ###leftBound2 = dist_peak+20
     ###rightBound2 = dist_peak+half_width2
 
@@ -292,12 +292,12 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     for jj in range(len(leftBound2)):
         if leftBound2[jj]<5 or rightBound2[jj]>len(flow_trace)-20:
             continue
-
         maxV = np.max(flow_trace[leftBound2[jj]:rightBound2[jj]])
         pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
 
+        if pos_ind+sideHalfWidth<1940:
         ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-        back_end = backEnd_find(SC_diff,pos_ind)
+            back_end = backEnd_find(SC_diff,pos_ind)
 
         B_list.append(pos_ind)
         D_list.append(back_end)
@@ -375,8 +375,8 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2_output1104_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211025DataSetAnalysis\\Plate3'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211025DataSetAnalysis\\Plate3_output1104_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'

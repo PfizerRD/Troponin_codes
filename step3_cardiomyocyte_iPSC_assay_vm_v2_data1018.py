@@ -70,6 +70,19 @@ def backEnd_find(SC_diff,SC_neg):
             result=rp2
             break
     return result
+ 
+
+def backEnd_find_updated(SC_diff,startInd,endInd):
+    SC_diff = abs(SC_diff)
+    local_max = SC_diff[start+2:endInd]
+    
+    local_pos, _ = find_peaks(SC_diff[start+2:endInd], height= local_max*0.75,distance=80)
+
+    local_pos = local_pos+start+2
+
+    result = backEnd_find(SC_diff,local_pos)
+    
+    return result
 
 
 def getLargestCC(segmentation):
@@ -239,7 +252,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
-    mask_region = (mask_label>0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
+    mask_region = (mask_label==0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
 
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
     mask_region_size = np.sum(mask_region)
@@ -254,13 +267,13 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     B_list = []
     D_list = []
 
-    half_width1 = 7 # related to sample freqency
+    half_width1 = 2 # related to sample freqency
     leftBound1 = SC_diff_pos-half_width1
     ###leftBound1 = dist_peak-half_width1
     rightBound1 = SC_diff_pos+half_width1
     ###rightBound1 = dist_peak
 
-    half_width2 = 11 # related to sample freqency
+    half_width2 = 2 # related to sample freqency
     leftBound2 = SC_diff_neg-half_width2
     rightBound2 = SC_diff_neg+half_width2
     ###leftBound2 = dist_peak+20
@@ -297,10 +310,17 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
 
         ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-        back_end = backEnd_find(SC_diff,pos_ind)
+
+        if jj < len(leftBound2)-1:
+            back_end = backEnd_find_updated(SC_diff,SC_diff_neg[jj],SC_diff_pos[jj+1])
+        else:
+            back_end = backEnd_find_updated(SC_diff,SC_diff_neg[jj],1900)
 
         B_list.append(pos_ind)
         D_list.append(back_end)
+
+
+
 
 
     As = np.array(A_list)
@@ -375,8 +395,8 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2_output1104_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1_output1104_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
