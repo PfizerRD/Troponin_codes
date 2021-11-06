@@ -62,7 +62,7 @@ def backEnd_find(SC_diff,SC_neg):
     ep =  SC_neg
     
     kk = 3
-    while kk<50:
+    while kk<20:
         rp1 = ep+kk
         rp2 = ep+kk+1
         kk = kk+1
@@ -74,12 +74,17 @@ def backEnd_find(SC_diff,SC_neg):
 
 def backEnd_find_updated(SC_diff,startInd,endInd):
     SC_diff = abs(SC_diff)
-    local_max = SC_diff[start+2:endInd]
+    local_max = SC_diff[startInd+2:endInd]
     
-    local_pos, _ = find_peaks(SC_diff[start+2:endInd], height= local_max*0.75,distance=80)
+    local_pos0, _ = find_peaks(SC_diff[startInd+2:endInd], height= local_max*0.45,distance=50)
+    if len(local_pos0)>0:
+        local_pos0 = local_pos0+startInd+1
+        local_ind = np.argmax(SC_diff[local_pos0])
 
-    local_pos = local_pos+start+2
-
+        local_pos = local_pos0[local_ind]
+    else:
+        local_pos=-1
+    print("local_pos: " + str(local_pos))
     result = backEnd_find(SC_diff,local_pos)
     
     return result
@@ -311,16 +316,13 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
         ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
 
-        if jj < len(leftBound2)-1:
-            back_end = backEnd_find_updated(SC_diff,SC_diff_neg[jj],SC_diff_pos[jj+1])
+        if jj < len(leftBound2)-2:
+            back_end = backEnd_find_updated(SC_diff,pos_ind,SC_diff_pos[jj+1])
         else:
-            back_end = backEnd_find_updated(SC_diff,SC_diff_neg[jj],1900)
+            back_end = backEnd_find_updated(SC_diff,pos_ind,len(SC_diff)-20)
 
         B_list.append(pos_ind)
         D_list.append(back_end)
-
-
-
 
 
     As = np.array(A_list)
@@ -380,6 +382,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     if len(Cs)>0:
         ax4.plot(Cs,abs(SC_diff[Cs]),">",markersize=8)
     if len(Ds)>0:
+        ###Ds = Ds[:-1]
         ax4.plot(Ds,abs(SC_diff[Ds]),"<", markersize=8)
     
     displayFigureName2 = OutputPath+"\\"+videoFileName+"_result.png"
@@ -396,7 +399,7 @@ if __name__ == "__main__":
     ds = 2
 
     RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1_output1104_no_video'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1_output1106_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
@@ -410,7 +413,7 @@ if __name__ == "__main__":
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[0:69:8])   
 
 
 
