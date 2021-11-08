@@ -62,7 +62,7 @@ def backEnd_find(SC_diff,SC_neg):
     ep =  SC_neg
     
     kk = 3
-    while kk<30:
+    while kk<50:
         rp1 = ep+kk
         rp2 = ep+kk+1
         kk = kk+1
@@ -70,37 +70,6 @@ def backEnd_find(SC_diff,SC_neg):
             result=rp2
             break
     return result
- 
-
-def backEnd_find_updated(SC_diff,startInd,endInd):
-    SC_diff = abs(SC_diff)
-    local_max = SC_diff[startInd+2:endInd]
-    
-    local_pos0, _ = find_peaks(SC_diff[startInd+2:endInd], height= local_max*0.45,distance=50)
-    if len(local_pos0)>0:
-        local_pos0 = local_pos0+startInd+1
-        local_ind = np.argmax(SC_diff[local_pos0])
-
-        local_pos = local_pos0[local_ind]
-    else:
-        return -1
-   
-    result = backEnd_find(SC_diff,local_pos)
-    
-    return result
-
-def pos_neg_find(SC_diff,posInd):
-
-    width =50
-    local_max = abs(SC_diff[posInd+5:posInd+width])
-    
-    local_pos0, _ = find_peaks(-SC_diff[posInd+5:posInd+width], height= local_max*0.45,distance=3)
-    if len(local_pos0)>0:
-        local_pos = local_pos0[0]
-        return local_pos
-    else:
-        return -1
-   
 
 
 def getLargestCC(segmentation):
@@ -226,17 +195,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     SC_diff_min = np.min(SC_diff)
 
     SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.75,distance=40)
-    ###SC_diff_neg0 = -1*np.ones(SC_diff_pos.shape)
-    ###for jj in range(len(SC_diff_pos)):
-    ###    SC_diff_neg0[jj] = pos_neg_find(SC_diff,SC_diff_pos[jj])
-    print(SC_diff_pos)
-
-    ###SC_diff_neg = SC_diff_neg0.astype(int)
     SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=40)
-    print(SC_diff_neg)
-
-    if len(SC_diff_neg)>1.6*len(SC_diff_pos):
-        SC_diff_neg = SC_diff_neg[0:-1:2]
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -262,25 +221,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     thresh = np.percentile(magSum,50) ## just 10/22 dataset
     mask = magSum>1*thresh
 
-    ###cellMask1 = binary_closing(mask,disk(1))
-    ###cellMask2 = ndi.binary_fill_holes(cellMask1)
-    ###cellMask3 =  remove_small_objects(cellMask2,200)
-
-    ###cellMask4 = binary_closing(cellMask3,disk(2))
-    ###cellMask5 = ndi.binary_fill_holes(cellMask4)
-    ###cellMask6 = binary_erosion(cellMask5,disk(1))
-    ###cellMask7 = binary_opening(cellMask6,disk(3))
-
-    ###cellMask8 =  remove_small_objects(cellMask7,200)
-    ###cellMask9 = clear_border(cellMask8)
-    ###cellMask9 = getLargestCC(cellMask9)
-
-    ###mask_label = label(cellMask9)
-
     mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
-    mask_region = (mask_label==0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
+    mask_region = (mask_label>0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
 
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
     mask_region_size = np.sum(mask_region)
@@ -295,13 +239,13 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     B_list = []
     D_list = []
 
-    half_width1 = 2 # related to sample freqency
+    half_width1 = 7 # related to sample freqency
     leftBound1 = SC_diff_pos-half_width1
     ###leftBound1 = dist_peak-half_width1
     rightBound1 = SC_diff_pos+half_width1
     ###rightBound1 = dist_peak
 
-    half_width2 = 2 # related to sample freqency
+    half_width2 = 11 # related to sample freqency
     leftBound2 = SC_diff_neg-half_width2
     rightBound2 = SC_diff_neg+half_width2
     ###leftBound2 = dist_peak+20
@@ -338,16 +282,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
 
         ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-
-        try: # for cases there are no regular pattern detected
-            if jj < len(leftBound2)-2:
-                back_end = backEnd_find_updated(SC_diff,pos_ind,SC_diff_pos[jj+1])
-            else:
-                ### back_end=-1
-                back_end = backEnd_find_updated(SC_diff,pos_ind,len(SC_diff)-20)
-        except IndexError:
-            back_end = -1
-  
+        back_end = backEnd_find(SC_diff,pos_ind)
 
         B_list.append(pos_ind)
         D_list.append(back_end)
@@ -410,7 +345,6 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     if len(Cs)>0:
         ax4.plot(Cs,abs(SC_diff[Cs]),">",markersize=8)
     if len(Ds)>0:
-        ###Ds = Ds[:-1]
         ax4.plot(Ds,abs(SC_diff[Ds]),"<", markersize=8)
     
     displayFigureName2 = OutputPath+"\\"+videoFileName+"_result.png"
@@ -426,8 +360,8 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211018DataSetAnalysis\\Plate1_output1106_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2_output1104_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
@@ -441,7 +375,7 @@ if __name__ == "__main__":
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders[38:])   
+    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
 
 
 
