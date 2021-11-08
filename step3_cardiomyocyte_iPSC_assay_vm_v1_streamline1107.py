@@ -190,12 +190,13 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     #########cv2.destroyAllWindows()
         
     SC_diff = (np.gradient(SC_values_ref[:-10]))
-
+    ###SC_diff = (np.gradient(SC_values_ref))
+    
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
     SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.75,distance=40)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=40)
+    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=120)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -210,7 +211,27 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
             SC_diff_pos = SC_diff_neg
             SC_diff_neg = tmp
 
+    ### added in 11/7 to improve duration pairing cases
+    
+    SC_diff_neg1 = []
+    SC_diff_neg2 = []
+    for kk in range(len(SC_diff_pos)-1):
+        ind0 = np.where((SC_diff_neg>SC_diff_pos[kk]) & (SC_diff_neg<SC_diff_pos[kk+1]))
+        ind = ind0[0]
+        SC_diff_neg1.append(SC_diff_neg[ind[0]]) # works on both len(ind)==1 or >1 situation
+        SC_diff_neg2.append(SC_diff_neg[ind[-1]])
 
+    ind0 = np.where((SC_diff_neg>SC_diff_pos[-1]) & (SC_diff_neg<len(SC_diff)))
+    ind = ind0[0]
+    SC_diff_neg1.append(SC_diff_neg[ind[0]]) # works on both len(ind)==1 or >1 situation
+    SC_diff_neg2.append(SC_diff_neg[ind[-1]])
+
+    SC_diff_neg = np.array(SC_diff_neg1)
+    SC_diff_neg2= np.array(SC_diff_neg2)
+    
+    ###
+    
+        
     SC_inv_height = np.max(1-SC_values_ref[:-10])
     dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=100)
     
@@ -224,7 +245,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     mask_label = label(mask)
 
     ###for jj in range(0,1):# just one object
-    mask_region = (mask_label>0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
+    mask_region = (mask_label==0)  ## mask_region = (mask_label>0)  for  1011 dataset; mask_region = (mask_label==0) 1018dataset, 1020dataset,1022dataset,1028?
 
     mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
     mask_region_size = np.sum(mask_region)
@@ -250,14 +271,18 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     rightBound2 = SC_diff_neg+half_width2
     ###leftBound2 = dist_peak+20
     ###rightBound2 = dist_peak+half_width2
-
+    half_width3 = 3 # related to sample freqency
+    leftBound3 = SC_diff_neg2-half_width3
+    rightBound3 = SC_diff_neg2+half_width3
+    
 
     sideHalfWidth = 15
 
     front_start = -1
     back_end = -1
     for jj in range(len(leftBound1)):
-        if leftBound1[jj]<5 or rightBound1[jj]>len(flow_trace)-20:
+        
+        if ((leftBound1[jj]<5) | (rightBound1[jj]>len(flow_trace)-20)):
             continue
 
         maxV = np.max(flow_trace[leftBound1[jj]:rightBound1[jj]])
@@ -275,14 +300,19 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         C_list.append(front_start)
 
     for jj in range(len(leftBound2)):
-        if leftBound2[jj]<5 or rightBound2[jj]>len(flow_trace)-20:
+
+        
+        if ((leftBound2[jj]<5) | (rightBound2[jj]>len(flow_trace)-20)):
             continue
 
         maxV = np.max(flow_trace[leftBound2[jj]:rightBound2[jj]])
         pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
 
+        pos_ind2 = leftBound3[jj]+np.argmax(abs(SC_diff[leftBound3[jj]:rightBound3[jj]]))
+
+        
         ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-        back_end = backEnd_find(SC_diff,pos_ind)
+        back_end = backEnd_find(SC_diff,pos_ind2)
 
         B_list.append(pos_ind)
         D_list.append(back_end)
@@ -340,6 +370,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     ax4.plot(abs(SC_diff[1:-10]),linewidth=2)
     ax4.plot(SC_diff_pos,abs(SC_diff[SC_diff_pos]),"o", markersize=8)
     ax4.plot(SC_diff_neg,abs(SC_diff[SC_diff_neg]),"x", markersize=8)
+    ax4.plot(SC_diff_neg2,abs(SC_diff[SC_diff_neg2]),"d", markersize=8)
     ax4.plot(dist_peak,abs(SC_diff[dist_peak]),"*")
 
     if len(Cs)>0:
@@ -352,16 +383,17 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     fig.savefig(displayFigureName2)
     fig.clf()
     plt.close(fig)
-
     
+    ####return SC_diff,flow_trace
+
     
     
 if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2_output1104_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates1_4'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates1_4_output1107_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
@@ -370,12 +402,8 @@ if __name__ == "__main__":
  
     cpu_num = 6
  
-
     subFolders = sorted(list(listdir_nohidden(RootPath)))
-    ###for mm in range(1,5):
-    ###    subfolder = subFolders[mm]
-    ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
+    ###for mm in range(1,2):
+     ###     subfolder = subFolders[mm]
+    ###    SC_diff, flow_trace = iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
     Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
-
-
-
