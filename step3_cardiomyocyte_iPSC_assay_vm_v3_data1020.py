@@ -195,7 +195,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.35,distance=40)
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.20,distance=40,width=7)
     SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=120)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
@@ -272,8 +272,8 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     rightBound1 = SC_diff_pos+half_width1
     ###rightBound1 = dist_peak
 
-    half_width2 = 17 # related to sample freqency
-    leftBound2 = SC_diff_neg+3
+    half_width2 = 25 # related to sample freqency
+    leftBound2 = SC_diff_neg+7
     rightBound2 = SC_diff_neg+half_width2
     ###leftBound2 = dist_peak+20
     ###rightBound2 = dist_peak+half_width2
@@ -398,15 +398,15 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_output1108_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_re_export'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_re_exportd_output1110_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 9
+    cpu_num = 10
  
     subFolders = sorted(list(listdir_nohidden(RootPath)))
     ###for mm in range(1,2):

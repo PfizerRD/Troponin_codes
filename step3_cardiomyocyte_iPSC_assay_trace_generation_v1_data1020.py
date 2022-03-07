@@ -261,86 +261,8 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     flow_trace = np.sum(magStack_mask,axis=0)
     flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
-    A_list = []
-    C_list = []
-    B_list = []
-    D_list = []
-
-    half_width1 = 7 # related to sample freqency
-    leftBound1 = SC_diff_pos-half_width1
-    ###leftBound1 = dist_peak-half_width1
-    rightBound1 = SC_diff_pos+half_width1
-    ###rightBound1 = dist_peak
-
-    half_width2 = 17 # related to sample freqency
-    leftBound2 = SC_diff_neg+3
-    rightBound2 = SC_diff_neg+half_width2
-    ###leftBound2 = dist_peak+20
-    ###rightBound2 = dist_peak+half_width2
-    half_width3 = 3 # related to sample freqency
-    leftBound3 = SC_diff_neg2-half_width3
-    rightBound3 = SC_diff_neg2+half_width3
-    
-
-    sideHalfWidth = 15
-
-    front_start = -1
-    back_end = -1
-    for jj in range(len(leftBound1)):
-        
-        if ((leftBound1[jj]<5) | (rightBound1[jj]>len(flow_trace)-20)):
-            continue
-
-        maxV = np.max(flow_trace[leftBound1[jj]:rightBound1[jj]])
-        neg_ind = leftBound1[jj]+np.argmax(flow_trace[leftBound1[jj]:rightBound1[jj]])
-
-        ###if jj == 1:
-        ###    sideHalfWidth = int(np.min(abs(dist_peak-neg_ind))+3)
-
-        if neg_ind-sideHalfWidth>5:
-            ###front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
-            ###front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
-            front_start = frontStart_find(SC_diff,neg_ind)
-
-        A_list.append(neg_ind)
-        C_list.append(front_start)
-
-    for jj in range(len(leftBound2)):
-
-        
-        if ((leftBound2[jj]<5) | (rightBound2[jj]>len(flow_trace)-20)):
-            continue
-
-        maxV = np.max(flow_trace[leftBound2[jj]:rightBound2[jj]])
-        pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
-
-        pos_ind2 = leftBound3[jj]+np.argmax(abs(SC_diff[leftBound3[jj]:rightBound3[jj]]))
-
-        
-        ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-        back_end = backEnd_find(SC_diff,pos_ind2)
-
-        B_list.append(pos_ind)
-        D_list.append(back_end)
-
-
-    As = np.array(A_list)
-    Bs = np.array(B_list)
-    Cs = np.array(C_list)
-    Ds = np.array(D_list)
-    
-    print(As)
-    print(Bs)
-    print(Cs)
-    print(Ds)
-
-    reg_periods = min(len(As),len(Bs),len(SC_diff_pos),len(SC_diff_neg))
-    for mm in range(reg_periods):
-        ## writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
-        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],Cs[mm], Ds[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]],np.percentile(flow_trace,5)))
-
-    fout.flush()
-    fout.close()
+    rawDataFileName = OutputPath+"\\"+videoFileName + "_feature_traces.npz"
+    np.savez(rawDataFileName,optical_flow_trace = flow_trace,similary_measure = SC_values_ref)
 
 
     fig, (ax1,ax2,ax3,ax4) = plt.subplots(4,1)
@@ -362,27 +284,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     ax1.imshow(img_masked)
     ax2.plot(flow_trace[1:-10],linewidth=2)
-    if len(As)>0:
-        ax2.plot(As,flow_trace[As], "o",markersize=8)
-    if len(Bs)>0:
-        ax2.plot(Bs,flow_trace[Bs], "x", markersize=8)
-    ###ax2.plot(SC_diff_pos,flow_trace[SC_diff_pos],'o', markersize=8)
-    ###ax2.plot(SC_diff_neg,flow_trace[SC_diff_neg],'x', markersize=8)
-
 
     ax3.plot(1-SC_values_ref[:-10],linewidth=2)
-    ax3.plot(dist_peak,1-SC_values_ref[dist_peak],"*", markersize=8)
 
     ax4.plot(abs(SC_diff[1:-10]),linewidth=2)
-    ax4.plot(SC_diff_pos,abs(SC_diff[SC_diff_pos]),"o", markersize=8)
-    ax4.plot(SC_diff_neg,abs(SC_diff[SC_diff_neg]),"x", markersize=8)
-    ax4.plot(SC_diff_neg2,abs(SC_diff[SC_diff_neg2]),"d", markersize=8)
-    ax4.plot(dist_peak,abs(SC_diff[dist_peak]),"*")
-
-    if len(Cs)>0:
-        ax4.plot(Cs,abs(SC_diff[Cs]),">",markersize=8)
-    if len(Ds)>0:
-        ax4.plot(Ds,abs(SC_diff[Ds]),"<", markersize=8)
     
     displayFigureName2 = OutputPath+"\\"+videoFileName+"_result.png"
     print(displayFigureName2)
@@ -399,7 +304,7 @@ if __name__ == "__main__":
     ds = 2
 
     RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_output1108_no_video'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_trace_output'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'

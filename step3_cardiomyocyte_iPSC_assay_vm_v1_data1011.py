@@ -249,6 +249,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     flow_trace = np.sum(magStack_mask,axis=0)
     flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
+
+    rawDataFileName = OutputPath+"\\"+videoFileName + "_feature_traces.npz"
+    np.savez(rawDataFileName,optical_flow_trace = flow_trace,similary_measure = SC_values_ref)
+
+
     A_list = []
     C_list = []
     B_list = []
@@ -375,8 +380,8 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211011DataSetAnalysis\\IPSC_Plates1_2_output1104_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Representative_Traces\\1011_dataset'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Representative_Traces\\1011_dataset_output2022_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'

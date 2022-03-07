@@ -62,7 +62,7 @@ def backEnd_find(SC_diff,SC_neg):
     ep =  SC_neg
     
     kk = 3
-    while kk<20 and ep<len(SC_diff)-21:
+    while kk<50:
         rp1 = ep+kk
         rp2 = ep+kk+1
         kk = kk+1
@@ -145,8 +145,8 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     print(videoOut)
 
     fps = 50
-    #########fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    #########VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
 
 
     ###for ii in range(1,imageNum-1):
@@ -170,12 +170,12 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         ###flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, pyr_scale = 0.5, levels = 5, winsize = 11, iterations = 5, poly_n = 5, poly_sigma = 1.1, flags = 0)
 
         mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
-        #########hsv[...,0] = ang*180/np.pi/2
+        hsv[...,0] = ang*180/np.pi/2
         #hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-        #########hsv[...,2] = mag*380
+        hsv[...,2] = mag*380
         #print(np.max(mag))
-        #########bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
-        #########vis = draw_flow(next, flow*80)
+        bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+        vis = draw_flow(next, flow*80)
 
         magStack[:,:,ii] = mag
 
@@ -183,20 +183,19 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
             print(ii)
         prvs = next
 
-        #########frame_final = np.concatenate((bgr,vis),axis=1)
-        #########VideoOutput.write(frame_final)
+        frame_final = np.concatenate((bgr,vis),axis=1)
+        VideoOutput.write(frame_final)
 
-    #########VideoOutput.release()    
-    #########cv2.destroyAllWindows()
+    VideoOutput.release()    
+    cv2.destroyAllWindows()
         
     SC_diff = (np.gradient(SC_values_ref[:-10]))
-    ###SC_diff = (np.gradient(SC_values_ref))
-    
+
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.35,distance=40)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=120)
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.75,distance=40)
+    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=40)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -211,33 +210,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
             SC_diff_pos = SC_diff_neg
             SC_diff_neg = tmp
 
-    ### added in 11/7 to improve duration pairing cases
-    
-    try: 
-        SC_diff_neg1 = []
-        SC_diff_neg2 = []
-        for kk in range(len(SC_diff_pos)-1):
-            ind0 = np.where((SC_diff_neg>SC_diff_pos[kk]) & (SC_diff_neg<SC_diff_pos[kk+1]))
-            ind = ind0[0]
 
-            SC_diff_neg1.append(SC_diff_neg[ind[0]]) # works on both len(ind)==1 or >1 situation
-            SC_diff_neg2.append(SC_diff_neg[ind[-1]])
-
-        ind0 = np.where((SC_diff_neg>SC_diff_pos[-1]) & (SC_diff_neg<len(SC_diff)))
-        ind = ind0[0]
-        SC_diff_neg1.append(SC_diff_neg[ind[0]]) # works on both len(ind)==1 or >1 situation
-        SC_diff_neg2.append(SC_diff_neg[ind[-1]])
-
-        SC_diff_neg = np.array(SC_diff_neg1)
-        SC_diff_neg2= np.array(SC_diff_neg2)
-
-    except IndexError:
-        SC_diff_neg2 = SC_diff_neg
-
-    
-    ###
-    
-        
     SC_inv_height = np.max(1-SC_values_ref[:-10])
     dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=100)
     
@@ -247,6 +220,21 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     ###thresh = np.percentile(magSum,50)
     thresh = np.percentile(magSum,50) ## just 10/22 dataset
     mask = magSum>1*thresh
+
+    ###cellMask1 = binary_closing(mask,disk(1))
+    ###cellMask2 = ndi.binary_fill_holes(cellMask1)
+    ###cellMask3 =  remove_small_objects(cellMask2,200)
+
+    ###cellMask4 = binary_closing(cellMask3,disk(2))
+    ###cellMask5 = ndi.binary_fill_holes(cellMask4)
+    ###cellMask6 = binary_erosion(cellMask5,disk(1))
+    ###cellMask7 = binary_opening(cellMask6,disk(3))
+
+    ###cellMask8 =  remove_small_objects(cellMask7,200)
+    ###cellMask9 = clear_border(cellMask8)
+    ###cellMask9 = getLargestCC(cellMask9)
+
+    ###mask_label = label(cellMask9)
 
     mask_label = label(mask)
 
@@ -261,86 +249,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     flow_trace = np.sum(magStack_mask,axis=0)
     flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
-    A_list = []
-    C_list = []
-    B_list = []
-    D_list = []
 
-    half_width1 = 7 # related to sample freqency
-    leftBound1 = SC_diff_pos-half_width1
-    ###leftBound1 = dist_peak-half_width1
-    rightBound1 = SC_diff_pos+half_width1
-    ###rightBound1 = dist_peak
+    rawDataFileName = OutputPath+"\\"+videoFileName + "_feature_traces.npz"
+    np.savez(rawDataFileName,optical_flow_trace = flow_trace,similary_measure = SC_values_ref)
 
-    half_width2 = 17 # related to sample freqency
-    leftBound2 = SC_diff_neg+3
-    rightBound2 = SC_diff_neg+half_width2
-    ###leftBound2 = dist_peak+20
-    ###rightBound2 = dist_peak+half_width2
-    half_width3 = 3 # related to sample freqency
-    leftBound3 = SC_diff_neg2-half_width3
-    rightBound3 = SC_diff_neg2+half_width3
-    
-
-    sideHalfWidth = 15
-
-    front_start = -1
-    back_end = -1
-    for jj in range(len(leftBound1)):
-        
-        if ((leftBound1[jj]<5) | (rightBound1[jj]>len(flow_trace)-20)):
-            continue
-
-        maxV = np.max(flow_trace[leftBound1[jj]:rightBound1[jj]])
-        neg_ind = leftBound1[jj]+np.argmax(flow_trace[leftBound1[jj]:rightBound1[jj]])
-
-        ###if jj == 1:
-        ###    sideHalfWidth = int(np.min(abs(dist_peak-neg_ind))+3)
-
-        if neg_ind-sideHalfWidth>5:
-            ###front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
-            ###front_start = neg_ind-sideHalfWidth+np.argmin(SC_diff[neg_ind-sideHalfWidth:neg_ind])
-            front_start = frontStart_find(SC_diff,neg_ind)
-
-        A_list.append(neg_ind)
-        C_list.append(front_start)
-
-    for jj in range(len(leftBound2)):
-
-        
-        if ((leftBound2[jj]<5) | (rightBound2[jj]>len(flow_trace)-20)):
-            continue
-
-        maxV = np.max(flow_trace[leftBound2[jj]:rightBound2[jj]])
-        pos_ind = leftBound2[jj]+np.argmax(flow_trace[leftBound2[jj]:rightBound2[jj]])
-
-        pos_ind2 = leftBound3[jj]+np.argmax(abs(SC_diff[leftBound3[jj]:rightBound3[jj]]))
-
-        
-        ###back_end = pos_ind+np.argmin(SC_diff[pos_ind:pos_ind+sideHalfWidth])
-        back_end = backEnd_find(SC_diff,pos_ind2)
-
-        B_list.append(pos_ind)
-        D_list.append(back_end)
-
-
-    As = np.array(A_list)
-    Bs = np.array(B_list)
-    Cs = np.array(C_list)
-    Ds = np.array(D_list)
-    
-    print(As)
-    print(Bs)
-    print(Cs)
-    print(Ds)
-
-    reg_periods = min(len(As),len(Bs),len(SC_diff_pos),len(SC_diff_neg))
-    for mm in range(reg_periods):
-        ## writer.writerow( ('subFolder','Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value','OpticalFlow_B_value','Correlation_A_index','Correlation_B_index','Correlation_A_value','Correlation_B_value') )
-        writer.writerow((videoFileName,  As[mm],Bs[mm],flow_trace[As[mm]],flow_trace[Bs[mm]],SC_diff_pos[mm], SC_diff_neg[mm],Cs[mm], Ds[mm],SC_diff[SC_diff_pos[mm]],SC_diff[SC_diff_neg[mm]],np.percentile(flow_trace,5)))
-
-    fout.flush()
-    fout.close()
 
 
     fig, (ax1,ax2,ax3,ax4) = plt.subplots(4,1)
@@ -362,44 +274,27 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
 
     ax1.imshow(img_masked)
     ax2.plot(flow_trace[1:-10],linewidth=2)
-    if len(As)>0:
-        ax2.plot(As,flow_trace[As], "o",markersize=8)
-    if len(Bs)>0:
-        ax2.plot(Bs,flow_trace[Bs], "x", markersize=8)
-    ###ax2.plot(SC_diff_pos,flow_trace[SC_diff_pos],'o', markersize=8)
-    ###ax2.plot(SC_diff_neg,flow_trace[SC_diff_neg],'x', markersize=8)
+   
 
 
     ax3.plot(1-SC_values_ref[:-10],linewidth=2)
-    ax3.plot(dist_peak,1-SC_values_ref[dist_peak],"*", markersize=8)
-
+    
     ax4.plot(abs(SC_diff[1:-10]),linewidth=2)
-    ax4.plot(SC_diff_pos,abs(SC_diff[SC_diff_pos]),"o", markersize=8)
-    ax4.plot(SC_diff_neg,abs(SC_diff[SC_diff_neg]),"x", markersize=8)
-    ax4.plot(SC_diff_neg2,abs(SC_diff[SC_diff_neg2]),"d", markersize=8)
-    ax4.plot(dist_peak,abs(SC_diff[dist_peak]),"*")
-
-    if len(Cs)>0:
-        ax4.plot(Cs,abs(SC_diff[Cs]),">",markersize=8)
-    if len(Ds)>0:
-        ax4.plot(Ds,abs(SC_diff[Ds]),"<", markersize=8)
+   
     
     displayFigureName2 = OutputPath+"\\"+videoFileName+"_result.png"
     print(displayFigureName2)
     fig.savefig(displayFigureName2)
     fig.clf()
     plt.close(fig)
-    
-    ####return SC_diff,flow_trace
 
-    
     
 if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_output1108_no_video'
+    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0217_iCell_smMol_DataSetAnalysis\Plate_Time2h'
+    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0217_iCell_smMol_DataSetAnalysis\Plate_Time2h_output'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
@@ -408,8 +303,12 @@ if __name__ == "__main__":
  
     cpu_num = 9
  
+
     subFolders = sorted(list(listdir_nohidden(RootPath)))
-    ###for mm in range(1,2):
-     ###     subfolder = subFolders[mm]
-    ###    SC_diff, flow_trace = iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
+    ###for mm in range(1,5):
+    ###    subfolder = subFolders[mm]
+    ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
     Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
+
+
+

@@ -53,7 +53,8 @@ def tiff_folder_generation(outputFolder,imageName):
     (dirName,tiffFileName) = os.path.split(imageName)
 
     subfolderName = re.split('t\d{3,4}',tiffFileName)[0]
-    frameName0=re.split('_s\d{2,3}t',tiffFileName)[1]
+    frameName0=re.split('_s\d{1,3}t',tiffFileName)[1]
+    ######frameName0=re.split('_s\dt',tiffFileName)[1]
     frameName="frame_"+re.split('_ORG',frameName0)[0]
 
     outputSubFolder = outputFolder+'\\' + subfolderName
@@ -94,15 +95,16 @@ if __name__ == "__main__":
 
     tic = time.time()
 
-    rootDir = r'Z:\techcenter-omtc\Projects\RDRU_Mybpc3\211011_IPSC_Pilot_Data\Export\211011_Brandon_IPSC_Plate1\*.tif'
-    outputFolder = r'Z:\techcenter-omtc\Scratch\pangj05\RDRU_MYBPC3_2021\Pilot20211011\IPSC_Plate1'
+    rootDir = r'Q:\Projects\RDRU_Mybpc3\220217_iCell_SmMol\Exported\Plate_Time2h\*.tif'
+    outputFolder = r'Z:\pangj05\RDRU_MYBPC3_2022\0217_iCell_smMol_DataSetAnalysis\Plate_Time2h'
 
-    cpu_num = 4
+    cpu_num = 6
     if not os.path.isdir(outputFolder):
         print('The OUTPUT directory is not present. Creating a new one..')
         os.mkdir(outputFolder)
         
     imageNames = sorted(glob.glob(rootDir))
+    ###imageNames = imageNames0[::2]
 
     print("image number: " + str(len(imageNames)))
     ## have to set to single core to run to avoid folder/directory overwriting conflicts

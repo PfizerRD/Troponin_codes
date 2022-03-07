@@ -195,8 +195,10 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     SC_diff_max = np.max(SC_diff)
     SC_diff_min = np.min(SC_diff)
 
-    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.35,distance=40)
-    SC_diff_neg, _ = find_peaks(-SC_diff, height= -SC_diff_min*0.75,distance=120)
+    amp_max = np.max(abs(SC_diff))
+
+    SC_diff_pos, _ = find_peaks(SC_diff, height= SC_diff_max*0.10,distance=15,width=3)
+    SC_diff_neg, _ = find_peaks(abs(SC_diff), height= amp_max*0.75,distance=60)
 
     ### added in 10/19 fixed the issue of uncomplete cycle at the beginning
     if len(SC_diff_neg)>1 and len(SC_diff_pos)>0:
@@ -239,7 +241,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     
         
     SC_inv_height = np.max(1-SC_values_ref[:-10])
-    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=100)
+    dist_peak, _ = find_peaks(1-SC_values_ref[:-10], height=  SC_inv_height*0.75,distance=60)
     
     
     ###thresh = threshold_otsu(magSum)
@@ -261,6 +263,9 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     flow_trace = np.sum(magStack_mask,axis=0)
     flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
+    rawDataFileName = OutputPath+"\\"+videoFileName + "_opticalFlow_trace.npz"
+    np.savez(rawDataFileName,optical_flow_trace = flow_trace)
+
     A_list = []
     C_list = []
     B_list = []
@@ -272,14 +277,14 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     rightBound1 = SC_diff_pos+half_width1
     ###rightBound1 = dist_peak
 
-    half_width2 = 17 # related to sample freqency
+    half_width2 = 15 # related to sample freqency
     leftBound2 = SC_diff_neg+3
     rightBound2 = SC_diff_neg+half_width2
     ###leftBound2 = dist_peak+20
     ###rightBound2 = dist_peak+half_width2
     half_width3 = 3 # related to sample freqency
     leftBound3 = SC_diff_neg2-half_width3
-    rightBound3 = SC_diff_neg2+half_width3
+    rightBound3 = SC_diff_neg2+half_width3+3
     
 
     sideHalfWidth = 15
@@ -398,15 +403,15 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_output1108_no_video'
+    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Representative_Traces\\1028_dataset'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\Representative_Traces\\1028_dataset_output1110_no_video'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
 
     subfolders = list(listdir_nohidden(RootPath))
  
-    cpu_num = 9
+    cpu_num = 2
  
     subFolders = sorted(list(listdir_nohidden(RootPath)))
     ###for mm in range(1,2):

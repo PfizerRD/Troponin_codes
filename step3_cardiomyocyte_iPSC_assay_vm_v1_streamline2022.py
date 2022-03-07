@@ -145,8 +145,8 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     print(videoOut)
 
     fps = 50
-    #########fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    #########VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    VideoOutput = cv2.VideoWriter(videoOut, fourcc, fps, (2*wid,hei))
 
 
     ###for ii in range(1,imageNum-1):
@@ -170,12 +170,12 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         ###flow = cv2.calcOpticalFlowFarneback(prvs_s,next_s, None, pyr_scale = 0.5, levels = 5, winsize = 11, iterations = 5, poly_n = 5, poly_sigma = 1.1, flags = 0)
 
         mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
-        #########hsv[...,0] = ang*180/np.pi/2
-        #hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
-        #########hsv[...,2] = mag*380
+        hsv[...,0] = ang*180/np.pi/2
+        #####hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
+        hsv[...,2] = mag*380
         #print(np.max(mag))
-        #########bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
-        #########vis = draw_flow(next, flow*80)
+        bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+        vis = draw_flow(next, flow*80)
 
         magStack[:,:,ii] = mag
 
@@ -183,11 +183,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
             print(ii)
         prvs = next
 
-        #########frame_final = np.concatenate((bgr,vis),axis=1)
-        #########VideoOutput.write(frame_final)
+        frame_final = np.concatenate((bgr,vis),axis=1)
+        VideoOutput.write(frame_final)
 
-    #########VideoOutput.release()    
-    #########cv2.destroyAllWindows()
+    VideoOutput.release()    
+    cv2.destroyAllWindows()
         
     SC_diff = (np.gradient(SC_values_ref[:-10]))
     ###SC_diff = (np.gradient(SC_values_ref))
@@ -398,8 +398,8 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9'
-    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plates5_9_output1108_no_video'
+    RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2022\\0217_iCell_smMol_DataSetAnalysis\\Plate_Time0'
+    OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2022\\0217_iCell_smMol_DataSetAnalysis\\Plate_Time0_output'
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
 
     ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
