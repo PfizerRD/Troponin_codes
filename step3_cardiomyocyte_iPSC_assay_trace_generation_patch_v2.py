@@ -88,21 +88,28 @@ def cellSegmentation(frame_ref):
 
 
 def ExtractTracePatch(mask_region,magStack,frameStack,frame_ref):
-    mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
-    mask_region_size = np.sum(mask_region)
-    ##print(mask_region_size)
-    ##plt.imshow(mask_region_stack[:,:,200])
-    magStack_mask = np.multiply(magStack, mask_region_stack.astype(int))
-    flow_trace = np.sum(magStack_mask,axis=0)
-    flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
+    
+    ###mask_region_stack = np.repeat(mask_region[:, :, np.newaxis], magStack.shape[2], axis=2)
+    ###mask_region_size = np.sum(mask_region)
+  
+    ###magStack_mask = np.multiply(magStack, mask_region_stack.astype(int))
+    ###flow_trace = np.sum(magStack_mask,axis=0)
+    ###flow_trace = np.sum(flow_trace, axis=0)/mask_region_size
 
+    
     hei,wid,imgNum = frameStack.shape 
 
     
     active_px = np.argwhere(mask_region>0)
+
+    flow_region = magStack[active_px[:,0],active_px[:,1],:]
+
+    flow_trace = np.percentile(flow_region,90,axis=0)
+
     x,y,w,h = cv2.boundingRect(active_px)
     
     SC_values_patch = np.zeros(imgNum)
+
     for kk in range(imgNum):
         SC_values_patch[kk] = SimilarityComparison(frame_ref[x:x+w-1,y:y+h-1], frameStack[x:x+w-1,y:y+h-1,kk])
 
@@ -196,11 +203,11 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
         bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
         vis = draw_flow(next, flow*80)
 
-        mag[0:10,:] = 0
-        mag[hei-10:hei,:] = 0
+        ###mag[0:10,:] = 0
+        ###mag[hei-10:hei,:] = 0
 
-        mag[:,0:10] = 0
-        mag[:,wid-10:wid] = 0
+        ###mag[:,0:10] = 0
+        ###mag[:,wid-10:wid] = 0
 
         magStack[:,:,ii-1] = mag
         frameStack[:,:,ii-1] = frame2
@@ -220,7 +227,6 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     soft_th = np.percentile(magStack,95)
     magStack_soft = magStack > soft_th
     magStack= np.multiply(magStack, magStack_soft.astype(int))
-    ###magStack = (magStack < soft_th) * magStack
 
     mask_label = cellSegmentation(frame_ref)
     cellNum = np.max(mask_label[:])
@@ -274,11 +280,11 @@ if __name__ == "__main__":
 
     ds = 2
 
-    ###RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish2'
-    ###OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish2_output'
+    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish1'
+    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish1_output'
     
-    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2'
-    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2_output'
+    ###RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2'
+    ###OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2_output'
 
 
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
@@ -290,7 +296,7 @@ if __name__ == "__main__":
     cpu_num = 5
  
     subFolders = sorted(list(listdir_nohidden(RootPath)))
-    subFolders = subFolders
+    subFolders = subFolders[0:5]
     ###for mm in range(1,5):
     ###    subfolder = subFolders[mm]
     ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
