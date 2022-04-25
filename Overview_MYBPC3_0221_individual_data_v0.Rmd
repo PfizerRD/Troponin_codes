@@ -1,0 +1,345 @@
+---
+title: 'MYBPC3 relaxation timepoint quantification: 0221 PILOT individual CM data overview'
+author: "Jincheng Pang"
+date: "Created: March. 10"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  word_document:
+    toc: yes
+    toc_depth: '3'
+geometry: margin=1cm
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(cache=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{r, echo=FALSE}
+rm(list=ls())
+
+library(lattice)
+library(doBy)
+library(ggplot2)
+library(scales)
+library(data.table)
+library(RColorBrewer)
+library(gdata)
+library(Rmisc) 
+library(gridExtra)
+library(lsmeans)
+library(lme4);
+library(lmerTest);
+library(tidyr)
+library(plyr)
+library(stringr)
+library(wesanderson)
+
+#+++++++++++++++++++++++++
+# Function to calculate the mean and the standard deviation
+  # for each group
+#+++++++++++++++++++++++++
+# data : a data frame
+# varname : the name of a column containing the variable
+  #to be summariezed
+# groupnames : vector of column names to be used as
+  # grouping variables
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE))
+  }
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+plotQC <- function(m0){
+  lmResiduals <- residuals(m0)
+  fig1 <- histogram(~lmResiduals,
+                    xlab="Residuals",
+                    type=c("density"),
+                    panel = function(x, ...){
+                      panel.histogram(x, ...)
+                      panel.mathdensity(dmath = dnorm, col="black",
+                                        args = list(mean=mean(x),sd=sd(x)))
+                      })
+  
+  fig2 <- qqmath(~lmResiduals,
+                 prepanel=prepanel.qqmathline,
+                 panel=function(x,...){panel.qqmathline(x,...);panel.qqmath(x,...)},
+                 xlab="Random Normal Distribution Points",
+                 ylab="Residuals")
+  
+  print(fig1, split=c(1,1,2,1), more=TRUE)
+  print(fig2, split=c(2,1,2,1))
+} 
+
+lsmeans = lsmeans::lsmeans ### Uses the lsmeans function
+                           ###  from the lsmeans package,
+                           ###  not from the lmerTest package
+
+library(gridExtra)
+
+rowMedian<-function(x,na.rm=TRUE)
+{
+  apply(x,1,median,na.rm=na.rm)
+}
+
+rowMedian<-function(x,na.rm=TRUE)
+{
+  apply(x,1,median,na.rm=na.rm)
+}
+
+
+cm_endpoint_load<-function(csvFolderName,ds,Fs)
+{
+
+csvFiles<- list.files(path=csvFolderName,pattern = "\\.csv$",full.names=TRUE,recursive = FALSE)
+
+dat_final = NULL
+for(ff in csvFiles)
+{
+  dat0<-read.csv(ff,as.is=TRUE)
+  dat_final<-rbind(dat_final,dat0)
+}
+#colnames(dat_final)<-c('subFolder', 'Optical_A_index', 'Optical_B_index', 'OpticalFlow_A_value', 'OpticalFlow_B_value',
+#                       'Correlation_diff_A_index', 'Correlation_diff_B_index', 'Correlation_diff_A_value', 'Correlation_diff_B_value','OpticalFlow_baseline')
+
+###dat_final$contraction_speed<-(dat_final$OpticalFlow_A_value-dat_final$Optical_Flow_baseline)*0.65*ds*Fs # unit: micrometer/second using optical flow based calculation
+###dat_final$relaxation_speed<-(dat_final$OpticalFlow_B_value-dat_final$Optical_Flow_baseline)*0.65*ds*Fs # unit: micrometer/second using optical flow based calculation
+###dat_final$p2p_time<-abs(dat_final$Correlation_diff_A_index-dat_final$Correlation_diff_B_index)/Fs # unit: second using correlation based calculation
+
+dat_final$contraction_speed<-(dat_final$OpticalFlow_A_value)*0.65*ds*Fs # unit: micrometer/second using optical flow based calculation
+dat_final$relaxation_speed<-(dat_final$OpticalFlow_B_value)*0.65*ds*Fs # unit: micrometer/second using optical flow based calculation
+dat_final$baseline_speed<-(dat_final$OpticalFlow_baseline)*0.65*ds*Fs # unit: micrometer/second using optical flow based calculation
+dat_final$p2p_time<-abs(dat_final$Optical_A_index-dat_final$Optical_B_index)/Fs # unit: second using correlation based calculation
+
+dat_final$peak2baseline<-dat_final$OpticalFlow_A_value/dat_final$OpticalFlow_baseline
+dat_final$subFolder<-as.factor(dat_final$subFolder)
+
+dat_final$duration = (dat_final$Optical_D_index-dat_final$Optical_C_index)/Fs # unit: seconds
+###dat_final<-dat_final[dat_final$duration>0,]
+dat_final<-dat_final[dat_final$Optical_C_index!=-1,]
+dat_final<-dat_final[dat_final$Optical_D_index!=-1,]
+
+return(dat_final)
+}
+
+```
+
+```{r, echo=FALSE}
+ds = 2
+Fs = 100
+
+###### results
+
+csvFolderName =  'Q:\\Scratch\\pangj05\\RDRU_MYBPC3_2022\\0221_iCells_Patterned_Dishes_DataSetAnalysis\\220221_ICells_Mattek_Dish_1_output_50Hz_unShrink_annotation'
+dat_Mattek1<-cm_endpoint_load(csvFolderName,ds,Fs)
+well_Info1 = str_split_fixed(dat_Mattek1$subFolder, "_", 6)
+dat_Mattek1$group<-well_Info1[,3]
+dat_Mattek1$plate<-'plate1'
+dat_Mattek1$well<-well_Info1[,4]
+well_Info1 = str_split_fixed(dat_Mattek1$subFolder, "_ICells_", 2)
+dat_Mattek1$cell<-paste(well_Info1[,2],'plate1',sep='_')
+
+csvFolderName =  'Q:\\Scratch\\pangj05\\RDRU_MYBPC3_2022\\0221_iCells_Patterned_Dishes_DataSetAnalysis\\220221_ICells_Mattek_Dish_2_output_50Hz_Shrink_annotation'
+dat_Mattek2<-cm_endpoint_load(csvFolderName,ds,Fs)
+well_Info1 = str_split_fixed(dat_Mattek2$subFolder, "_", 8)
+dat_Mattek2$group<-well_Info1[,3]
+dat_Mattek2$plate<-'plate2'
+dat_Mattek2$well<-well_Info1[,6]
+well_Info2 = str_split_fixed(dat_Mattek2$subFolder, "_ICells_", 2)
+dat_Mattek2$cell<-well_Info2[,2]
+
+csvFolderName =  'Q:\\Scratch\\pangj05\\RDRU_MYBPC3_2022\\0221_iCells_Patterned_Dishes_DataSetAnalysis\\220221_ICells_Patterned_Dish1_output_50Hz_shrink_annotation'
+dat_Patterned1<-cm_endpoint_load(csvFolderName,ds,Fs)
+
+well_Info1 = str_split_fixed(dat_Patterned1$subFolder, "_", 6)
+dat_Patterned1$group<-well_Info1[,3]
+dat_Patterned1$plate<-'plate1'
+dat_Patterned1$well<-well_Info1[,5]
+well_Info2 = str_split_fixed(dat_Patterned1$subFolder, "_ICells_", 2)
+dat_Patterned1$cell<-well_Info2[,2]
+
+
+csvFolderName =  'Q:\\Scratch\\pangj05\\RDRU_MYBPC3_2022\\0221_iCells_Patterned_Dishes_DataSetAnalysis\\220221_ICells_Patterned_Dish2_output_50Hz_shrink19_annotation'
+dat_Patterned2<-cm_endpoint_load(csvFolderName,ds,Fs)
+
+well_Info1 = str_split_fixed(dat_Patterned2$subFolder, "_", 6)
+dat_Patterned2$group<-well_Info1[,3]
+dat_Patterned2$plate<-'plate2'
+dat_Patterned2$well<-well_Info1[,5]
+well_Info2 = str_split_fixed(dat_Patterned2$subFolder, "_ICells_", 2)
+dat_Patterned2$cell<-well_Info2[,2]
+
+
+dat_final<-rbind(dat_Mattek1,dat_Mattek2)
+dat_final<-rbind(dat_final,dat_Patterned1)
+dat_final<-rbind(dat_final,dat_Patterned2)
+dat_final$group<-as.factor(dat_final$group)
+dat_final$plate<-as.factor(dat_final$plate)
+dat_final$well<-as.factor(dat_final$well)
+dat_final$cell<-as.factor(dat_final$cell)
+#########
+######### Duration time
+
+
+
+dat_A_ind = dat_final[,c('subFolder','Optical_A_index')]
+
+dat_A_ind$diff = c(-1,diff(dat_A_ind$Optical_A_index))/Fs # unit: seconds
+dat_A_ind<-dat_A_ind[dat_A_ind$diff>0,]
+dat_A_nrm<-summaryBy(diff~subFolder,data=dat_A_ind,FUN=c(mean,sd))
+
+#########
+######field_nrm<-summaryBy(contraction_speed+relaxation_speed+p2p_time+peak2baseline~subFolder,data=dat_final,FUN=c(mean,length,sd))
+field_nrm<-summaryBy(contraction_speed+relaxation_speed+p2p_time+peak2baseline+duration+baseline_speed~subFolder+group+cell+well+plate,data=dat_final,FUN=c(mean,length,sd))
+
+field_nrm<-merge(dat_A_nrm,field_nrm,by='subFolder')
+
+field_nrm<-field_nrm[field_nrm$peak2baseline.mean>0,]
+
+field_nrm<-field_nrm[field_nrm$duration.length<20,]
+
+field_nrm<-field_nrm[field_nrm$contraction_speed.mean<25,]
+
+field_final<-field_nrm
+
+
+###### Preparation for QC
+###pre_QC_dat<-field_overview[,c('subFolder','Time','Position')]
+###pre_QC_dat<-pre_QC_dat[order(pre_QC_dat$subFolder),]
+###write.csv(pre_QC_dat,"pre_QC_0221data0.csv",row.names = FALSE)
+
+
+
+####################################################################
+### A is contraction and B is relaxation; A comes first than B #####
+####################################################################
+```
+
+#### Endpoints definition
+
+
+
+
+
+#### Definition of the endpoints for the assay
+
+
+
+
+
+### Contraction and relaxation speed
+
+```{r fig.width = 12, fig.height=10}
+
+plt.of_peakA<-ggplot(field_final, aes(x=group, y= contraction_speed.mean)) + 
+###facet_grid(.~plate,scales = "free")+
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('um/s')+ggtitle('Contraction Speed')
+print(plt.of_peakA)
+
+plt.cor_peakB<-ggplot(field_final, aes(x=group, y=relaxation_speed.mean)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('um/s')+ggtitle('Relaxation Speed')
+print(plt.cor_peakB)
+
+field_final$PeakA2B<-field_final$contraction_speed.mean/field_final$relaxation_speed.mean
+
+plt.cor_peakA2B<-ggplot(field_final, aes(x=group, y=PeakA2B)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('Ratio')+ggtitle('Contraction speed / Relaxation speed')
+print(plt.cor_peakA2B)
+
+###field_final$peakV_A_cov <-field_final$PeakV_A_of.sd/field_final$PeakV_A_of.mean
+###plt.cov_peakA<-ggplot(field_final, aes(x=Treatment, y=peakV_A_cov)) + 
+###facet_grid(.~Plate,scales = "free_x")+
+###geom_boxplot(outlier.shape = NA) +
+###geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = Treatment))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('Ratio')
+###print(plt.cov_peakA)
+
+###field_final$peakV_B_cov <-field_final$PeakV_B_of.sd/field_final$PeakV_B_of.mean
+###plt.cov_peakB<-ggplot(field_final, aes(x=Treatment, y=peakV_B_cov)) + 
+###facet_grid(.~Plate,scales = "free_x")+
+###geom_boxplot(outlier.shape = NA) +
+###geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = Treatment))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('Ratio')
+###print(plt.cov_peakB)
+```
+
+### Duration
+
+```{r fig.width = 12, fig.height=10}
+field_final$duration.cv = field_final$duration.sd/(field_final$duration.mean+0.001)
+
+plt.corr_count<-ggplot(field_final[field_final$duration.mean>0 ,], aes(x=group, y= duration.mean)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('Duration : second')
+print(plt.corr_count)
+
+plt.corr_count<-ggplot(field_final[field_final$duration.cv>0,], aes(x=group, y= duration.cv)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('Duration CV (sd / mean)')
+print(plt.corr_count)
+```
+
+### arrhythmicity (contraction to contraction peak time)
+
+```{r fig.width = 12, fig.height=10}
+
+field_final$diff.cv<-field_final$diff.sd/field_final$diff.mean
+
+plt.corr_count<-ggplot(field_final, aes(x=group, y= diff.mean)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('beating interval: second')
+print(plt.corr_count)
+
+
+plt.corr_count<-ggplot(field_final, aes(x=group, y= diff.cv)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('beating interval CV( sd/mean) ')
+print(plt.corr_count)
+```
+
+### arrithmic (beat rate: count per min)
+
+```{r fig.width = 12, fig.height=10}
+
+field_final$beating_rate<-60/field_final$diff.mean
+field_final<-field_final[field_final$beating_rate<200,]
+
+plt.corr_count<-ggplot(field_final, aes(x=group, y= beating_rate)) + 
+geom_boxplot(outlier.shape = NA) +
+geom_jitter(position = position_jitter(height = 0, width=0.1), size=1,aes(colour = group))+ theme(axis.text.x = element_text(angle = 80, hjust = 1))+ylab('beating rate: cycles per minute')
+print(plt.corr_count)
+
+
+
+
+###### Preparation for output
+###output1<-field_final[,c("Plate","Position","Well","Treatment","contraction_speed.mean","relaxation_speed.mean","beating_rate","duration.mean","diff###.cv","baseline_speed.mean")]
+###colnames(output1)<-c("Plate","Position","Well","Treatment","contraction_speed","relaxation_speed","beating_rate","duration","arrhythmicity","baseli###ne_speed")
+###output2<-summaryBy(contraction_speed+relaxation_speed+beating_rate+duration+arrhythmicity+baseline_speed~Plate+Well+Treatment,data=output1,FUN=c(me###an))
+
+###colnames(output1)<-c("Plate","Position","Well","Treatment","contraction_speed(um/s)","relaxation_speed(um/s)","beating_rate(beat/min)","duration(s)###","arrhythmicity","baseline_speed(um/s)")
+###colnames(output2)<-c("Plate","Well","Treatment","contraction_speed(um/s)","relaxation_speed(um/s)","beating_rate(beat/min)","duration(s)","arrhythm###icity","baseline_speed(um/s)")
+
+###write.csv(output1,"data1011_results_position_updated.csv",row.names = FALSE)
+###write.csv(output2,"data1011_results_well_updated.csv",row.names = FALSE)
+
+cm_list<-unique(dat_final[,c('subFolder','group','plate','well','cell')])
+write.csv(cm_list,file='cm_list_qc_erostion.csv',row.names = FALSE)
+```

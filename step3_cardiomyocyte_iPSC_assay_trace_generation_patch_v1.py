@@ -82,7 +82,7 @@ def cellSegmentation(frame_ref):
     I_filt = np.multiply(I_filt,valid_region)
     result0 =  I_filt>thresh
     result1 = binary_opening(result0,disk(11))
-    result1 = binary_erosion(result1,disk(15))
+    result1 = binary_erosion(result1,disk(19))
     result1 = remove_small_objects(result1,1500)
     mask_label = label(result1)
     return mask_label
@@ -133,7 +133,7 @@ def iPSC_pipeline(RootPath,OutputPath,subfolder,ds=1):
     
     imageNames = sorted(glob.glob(imageNameRoot))
     
-    ###imageNames = imageNames[::2]
+    imageNames = imageNames[::2]
     ###imageNames=imageNames[0:500]
     
     imageNum = len(imageNames)
@@ -276,11 +276,11 @@ if __name__ == "__main__":
 
     ds = 2
 
-    ###RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish1'
-    ###OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish1_output_100Hz_shrink'
+    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish2'
+    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Patterned_Dish2_output_50Hz_shrink19'
     
-    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_1'
-    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_1_output_100Hz_Shrink'
+    ###RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2'
+    ###OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2_output_50Hz_Shrink19'
 
 
     ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
