@@ -93,35 +93,59 @@ def copy_first_frame(outputFolder,subfolder):
 
 if __name__ == "__main__":
 
+    rootDirAll = [
+    r'Q:\Projects\RDRU_Mybpc3\20220510_monolayer_iPSC_imaging_MYBPC3\Export\D12_plate_1\*.tif',
+    r'Q:\Projects\RDRU_Mybpc3\20220510_monolayer_iPSC_imaging_MYBPC3\Export\F11_first_half_plate_3\*.tif',
+    r'Q:\Projects\RDRU_Mybpc3\20220510_monolayer_iPSC_imaging_MYBPC3\Export\F11_plate_3_second_half\*.tif',
+    r'Q:\Projects\RDRU_Mybpc3\20220510_monolayer_iPSC_imaging_MYBPC3\Export\H11_plate_2\*.tif',
+    r'Q:\Projects\RDRU_Mybpc3\20220510_monolayer_iPSC_imaging_MYBPC3\Export\Parental_plate_4\*.tif'
+    ]
+
+    outPutFolderAll = [
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\D12_plate_1',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_first_half',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_second_half',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\H11_plate_2',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\Parental_plate_4'  
+    ]
+
+    assert len(rootDirAll) == len(outPutFolderAll)
+
+
     tic = time.time()
 
-    rootDir = r'Q:\Projects\RDRU_Mybpc3\20220511_iPSC_CM_single_cell_contractility_BF\Export\New-03\*.tif'
-    outputFolder = r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_03'
+    for mm in range(len(rootDirAll)):
 
-    cpu_num = 6
-    if not os.path.isdir(outputFolder):
-        print('The OUTPUT directory is not present. Creating a new one..')
-        os.mkdir(outputFolder)
+        tic = time.time()
+        rootDir = rootDirAll[mm]
+        outputFolder = outPutFolderAll[mm]
+        print(rootDir)
+        print(outputFolder)
+
+        cpu_num = 6
+        if not os.path.isdir(outputFolder):
+            print('The OUTPUT directory is not present. Creating a new one..')
+            os.mkdir(outputFolder)
+            
+        imageNames = sorted(glob.glob(rootDir))
+        ###imageNames = imageNames0[::2]
+
+        print("image number: " + str(len(imageNames)))
+        ## have to set to single core to run to avoid folder/directory overwriting conflicts
+        Parallel(n_jobs=1,prefer='threads')(delayed(folder_creation)(outputFolder,imageName) for imageName in imageNames)   
+        toc1 = time.time()
+        print('folder creation time: ' + str(toc1-tic))
+
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
+        toc2 = time.time()
+        print("copy/moving all frames time: " + str(toc2-toc1))
         
-    imageNames = sorted(glob.glob(rootDir))
-    ###imageNames = imageNames0[::2]
+        subfolders = sorted(list(listdir_nohidden(outputFolder)))
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(copy_first_frame)(outputFolder,subfolder) for subfolder in subfolders)  
+        toc = time.time()
+        print("copy first frame time: " + str(toc-toc2))
 
-    print("image number: " + str(len(imageNames)))
-    ## have to set to single core to run to avoid folder/directory overwriting conflicts
-    Parallel(n_jobs=1,prefer='threads')(delayed(folder_creation)(outputFolder,imageName) for imageName in imageNames)   
-    toc1 = time.time()
-    print('folder creation time: ' + str(toc1-tic))
-
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(tiff_folder_generation)(outputFolder,imageName) for imageName in imageNames)  
-    toc2 = time.time()
-    print("copy/moving all frames time: " + str(toc2-toc1))
-    
-    subfolders = sorted(list(listdir_nohidden(outputFolder)))
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(copy_first_frame)(outputFolder,subfolder) for subfolder in subfolders)  
-    toc = time.time()
-    print("copy first frame time: " + str(toc-toc2))
-
-    print('Total time is: ' + str(toc-tic))
+        print('Total time is: ' + str(toc-tic))
 
 
 

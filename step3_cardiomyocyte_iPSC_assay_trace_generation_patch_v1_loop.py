@@ -276,27 +276,66 @@ if __name__ == "__main__":
 
     ds = 2
 
-    RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\D12_plate_1'
-    OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\D12_plate_1_output'
-    
-    ###RootPath =   r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2'
-    ###OutputPath = r'Z:\pangj05\RDRU_MYBPC3_2022\0221_iCells_Patterned_Dishes_DataSetAnalysis\220221_ICells_Mattek_Dish_2_output_50Hz_Shrink19'
+    ###RootPathAll = [
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_01',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_02',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_03',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_04',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_05',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_06',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_07',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_08',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_09',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_10',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_11',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_12',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_14',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_15'
+    ###]
+    RootPathAll = [
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\H11_plate_2',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_first_half',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_second_half',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\Parental_plate_4'
+    ]
+    ###OutputPathAll = [
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_01_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_02_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_03_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_04_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_05_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_06_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_07_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_08_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_09_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_10_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_11_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_12_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_14_output',
+    ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_15_output'
+    ###]
+    OutputPathAll = [
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\H11_plate_2_output',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_first_half_output',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_second_half_output',
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\Parental_plate_4_output'
+    ]
 
+    assert len(OutputPathAll)==len(RootPathAll)
+    for mm in range(0,len(RootPathAll)):
+        RootPath = RootPathAll[mm]
+        OutputPath = OutputPathAll[mm]
 
-    ###RootPath =   'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1'
-
-    ###OutputPath = 'Z:\\pangj05\\RDRU_MYBPC3_2021\\20211020DataSetAnalysis\\Plate1_output_ar1'
-
-    subfolders = list(listdir_nohidden(RootPath))
- 
-    cpu_num = 6
- 
-    subFolders = sorted(list(listdir_nohidden(RootPath)))
-    subFolders = subFolders
-    ###for mm in range(1,5):
-    ###    subfolder = subFolders[mm]
-    ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
-    Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
+        subfolders = list(listdir_nohidden(RootPath))
+     
+        cpu_num = 6
+     
+        subFolders = sorted(list(listdir_nohidden(RootPath)))
+        subFolders = subFolders
+        ###for mm in range(1,5):
+        ###    subfolder = subFolders[mm]
+        ###    iPSC_pipeline(RootPath,OutputPath,subfolder,ds)
+        Parallel(n_jobs=cpu_num,prefer='threads')(delayed(iPSC_pipeline)(RootPath,OutputPath,subfolder,ds) for subfolder in subFolders)   
 
 
 
