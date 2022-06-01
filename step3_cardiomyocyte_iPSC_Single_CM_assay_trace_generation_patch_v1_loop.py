@@ -74,6 +74,7 @@ def SimilarityComparison(img10, img20):
     
     return SC
 
+### Setting for single CM
 def cellSegmentation(frame_ref):
     I_filt = generic_filter(frame_ref, np.std, size=15)
     thresh = np.percentile(I_filt[:], 70)
@@ -82,10 +83,25 @@ def cellSegmentation(frame_ref):
     I_filt = np.multiply(I_filt,valid_region)
     result0 =  I_filt>thresh
     result1 = binary_opening(result0,disk(11))
-    result1 = binary_erosion(result1,disk(19))
-    result1 = remove_small_objects(result1,1500)
+    result1 = binary_erosion(result1,disk(7))
+    result1 = remove_small_objects(result1,1200)
     mask_label = label(result1)
     return mask_label
+
+######Setting for monolayer CM
+###def cellSegmentation(frame_ref):
+###    I_filt = generic_filter(frame_ref, np.std, size=15)
+###    thresh = np.percentile(I_filt[:], 50)
+###    valid_region = np.zeros(I_filt.shape)
+###    valid_region[10:-10,10:-10] = 1
+###    I_filt = np.multiply(I_filt,valid_region)
+###    result0 =  I_filt>thresh
+###    result1 = binary_opening(result0,disk(11))
+###    ###result1 = binary_erosion(result1,disk(19))
+###    ###result1 = remove_small_objects(result1,1500)
+###    ###mask_label = label(result1)
+###    mask_label = getLargestCC(result1)
+###    return mask_label
 
 
 def ExtractTracePatch(mask_region,magStack,frameStack,frame_ref):
@@ -293,6 +309,7 @@ if __name__ == "__main__":
     ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_15'
     ###]
     RootPathAll = [
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\D12_plate_1',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\H11_plate_2',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_first_half',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_second_half',
@@ -315,6 +332,7 @@ if __name__ == "__main__":
     ###r'Z:\pangj05\RDRU_MYBPC3_2022\0511_iPSC_CM_single_cell_DataSetAnalysis\Plate_15_output'
     ###]
     OutputPathAll = [
+    r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\D12_plate_1_output',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\H11_plate_2_output',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_first_half_output',
     r'Z:\pangj05\RDRU_MYBPC3_2022\0510_iPSC_monolayer_DataSetAnalysis\F11_plate_3_second_half_output',
@@ -322,13 +340,14 @@ if __name__ == "__main__":
     ]
 
     assert len(OutputPathAll)==len(RootPathAll)
-    for mm in range(0,len(RootPathAll)):
+    ###for mm in range(0,len(RootPathAll)):
+    for mm in range(3,5):
         RootPath = RootPathAll[mm]
         OutputPath = OutputPathAll[mm]
 
         subfolders = list(listdir_nohidden(RootPath))
      
-        cpu_num = 6
+        cpu_num = 8
      
         subFolders = sorted(list(listdir_nohidden(RootPath)))
         subFolders = subFolders
